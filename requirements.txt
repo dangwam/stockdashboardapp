@@ -1,0 +1,10 @@
+streamlit
+pandas
+altair
+plotly
+yfinance
+yahooquery
+pytz
+os
+warnings
+datetime
