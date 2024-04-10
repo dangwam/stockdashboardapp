@@ -2,7 +2,6 @@ import streamlit as st
 import altair as alt  # Import altair for themes
 import pandas as pd
 import yfinance as yf
-import warnings
 from plotly import express as px
 import datetime
 from matplotlib import pyplot as plt
