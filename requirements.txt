@@ -5,6 +5,6 @@ plotly
 yfinance
 yahooquery
 datetime
-talib
+TA-Lib
 matplotlib
 seaborn
