@@ -4,7 +4,6 @@ altair
 plotly
 yfinance
 yahooquery
-warnings
 datetime
 talib
 matplotlib

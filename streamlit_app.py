@@ -11,8 +11,6 @@ from talib import RSI, BBANDS, MACD, HT_TRENDLINE, SAR, SMA
 #from financetoolkit import Toolkit
 from yahooquery import Ticker
 from yahooquery import Screener
-warnings.filterwarnings('ignore')
-
 s = Screener()
 
 #############################################
