@@ -4,15 +4,11 @@ import pandas as pd
 import yfinance as yf
 from finta import TA
 import mplfinance as mpf
-#from pandas_datareader import data as web
 from pandas_datareader import data as pdr
 from plotly import express as px
 import datetime
 from matplotlib import pyplot as plt
-#import seaborn as sns 
 from plotly import graph_objects as go
-#from talib import RSI, BBANDS, MACD, HT_TRENDLINE, SAR, SMA
-#from financetoolkit import Toolkit
 from yahooquery import Ticker
 from yahooquery import Screener
 yf.pdr_override()
@@ -35,7 +31,7 @@ hide = """
 title_format = """
                     <style> 
                         div.block-container{
-                            padding-top:1rem;
+                            padding-top:0rem;
                             padding-bottom:0rem;
                             }
                     </style>
@@ -104,8 +100,8 @@ st.markdown("""
 
 #######################
 
-#st.title("Equity Analysis App :chart_with_upwards_trend:")
-#st.markdown(title_format, unsafe_allow_html=True)
+st.title("Equity Analysis App :chart_with_upwards_trend:")
+st.markdown(title_format, unsafe_allow_html=True)
 #st.write("---------------------------------------------------------------------------------------------------------------------------------------------------------")
 # Load data -- data functions
 @st.cache_data
@@ -373,7 +369,7 @@ with col[1]:
     ta_df['BB_Upper'] = round(TA.MOBO(ohlc),2)['BB_UPPER']
     #ta_df['BB_Middle'] = round(TA.MOBO(ohlc),2)['BB_MIDDLE']
     ta_df['BB_Lower'] = round(TA.MOBO(ohlc),2)['BB_LOWER']
-    st.dataframe(ta_df.tail(8))
+    st.dataframe(ta_df.tail(5))
 ###### Next Plot the charts
     # Create a Matplotlib figure object
     fig, ax = mpf.plot(data,

@@ -1,10 +1,11 @@
 streamlit
 pandas
+pandas_datareader
 altair
 plotly
 yfinance
 yahooquery
 datetime
-ta-lib
+finta
 matplotlib
-seaborn
+mplfinance
