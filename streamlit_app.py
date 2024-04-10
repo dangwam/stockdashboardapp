@@ -2,8 +2,7 @@ import streamlit as st
 import altair as alt  # Import altair for themes
 import pandas as pd
 import yfinance as yf
-import pytz
-import os, warnings
+import warnings
 import plotly.express as px
 import datetime
 import matplotlib.pyplot as plt
@@ -184,18 +183,6 @@ def format_number(num):
             return f'{num // 1000000} M'
         return f'{round(num / 1000000, 1)} M'
     return f'{num // 1000} K'
-
-
-years = range(2024, 2014, -1)  # Generates list from 2024 to 2014 (inclusive)
-
-date_now = int(datetime.datetime.now(pytz.utc).strftime('%d'))
-month_now = int(datetime.datetime.now(pytz.utc).strftime('%m'))
-year_now = int(datetime.datetime.now(pytz.utc).strftime('%Y'))
-time_start = datetime.date(year=min(2010,year_now-10), month=1, day=1) # Take first day and month of 10 years ago / or take first day of 2010
-#time_start = datetime.date(year=2014, month=1, day=1)
-time_end = datetime.date(year=year_now, month=month_now, day=1) # Take first day of month of today's date
-# Streamlit App
-#st.title("Equity Analysis App :chart_with_upwards_trend:")  # Title with emoji
 
 # Sidebar for user input
 #######################

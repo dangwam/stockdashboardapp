@@ -5,8 +5,6 @@ plotly.express
 plotly.graph_objects
 yfinance
 yahooquery
-pytz
-os
 warnings
 datetime
 talib
