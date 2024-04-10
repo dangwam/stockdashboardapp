@@ -2,15 +2,21 @@ import streamlit as st
 import altair as alt  # Import altair for themes
 import pandas as pd
 import yfinance as yf
+from finta import TA
+import mplfinance as mpf
+#from pandas_datareader import data as web
+from pandas_datareader import data as pdr
 from plotly import express as px
 import datetime
 from matplotlib import pyplot as plt
-import seaborn as sns 
+#import seaborn as sns 
 from plotly import graph_objects as go
-from talib import RSI, BBANDS, MACD, HT_TRENDLINE, SAR, SMA
+#from talib import RSI, BBANDS, MACD, HT_TRENDLINE, SAR, SMA
 #from financetoolkit import Toolkit
 from yahooquery import Ticker
 from yahooquery import Screener
+yf.pdr_override()
+
 s = Screener()
 
 #############################################
@@ -166,13 +172,17 @@ def get_company_info(ticker):
 # Available years (last 10 years)
 
 @st.cache_data
-def fetch_all_ratios(ticker,start_date):
-     companies = Toolkit([ticker], api_key=API_KEY, start_date=start_date)
-     all_ratios = companies.ratios.collect_all_ratios()
-     return all_ratios
+def get_historical_data(symbol, start_date, end_date):
 
-#all_ratios = companies.ratios.collect_all_ratios()
-
+    df = pdr.get_data_yahoo(symbol, start=start_date, end=end_date)
+    df = df.rename(columns = {'Open': 'open', 'High': 'high', 'Low': 'low', 'Close': 'close', 'Adj Close': 'adj close', 'Volume': 'volume'})
+    for i in df.columns:
+        df[i] = df[i].astype(float)
+    df.index = pd.to_datetime(df.index)
+    if start_date:
+        df = df[df.index >= pd.to_datetime(start_date)]
+    return df
+    
 # Convert number to text 
 def format_number(num):
     if num > 1000000:
@@ -185,7 +195,8 @@ def format_number(num):
 #######################
 
 with st.sidebar:
-     st.title(":chart_with_upwards_trend: Stock Analysis")
+     st.sidebar.subheader('Settings')
+     st.sidebar.caption(":chart_with_upwards_trend: Stock Analysis")
      available_tickers, tickers_companies_dict = get_sp500_components()
      selected_ticker = st.sidebar.selectbox("Select Ticker", available_tickers, format_func=tickers_companies_dict.get)
      start_date = st.sidebar.date_input("Start date", datetime.date(2010, 1, 1))
@@ -335,7 +346,8 @@ with col[0]:
     #st.dataframe(ratio_df)
 
 with col[1]:
-    
+    chart_type = 'renko'
+    chart_style = 'starsandstripes'
     ticker = selected_ticker
     period = "1d"
     interval = "15m"
@@ -344,77 +356,42 @@ with col[1]:
     short_term_outlook = technical_insights['instrumentInfo']['technicalEvents']['shortTermOutlook']
     st_state_description = short_term_outlook['stateDescription']
     st_outlook_direction = short_term_outlook['direction']
-    st.write(f"Outlook->{st_state_description}Direction is {st_outlook_direction}")
+    st.write(f"Short term Outlook :- {st_state_description}....Direction is {st_outlook_direction}")
 
-    data = yf.download(tickers = ticker, start= start_date , end=end_date)
-    data = data.reset_index()
-    #### Compute Bollinger Bands , rsi , macd
-    up, mid, low = BBANDS(data.Close, timeperiod=21, nbdevup=2, nbdevdn=2, matype=0)
-    rsi = round(RSI(data.Close, timeperiod=14), 2)
-    macd, macdsignal, macdhist = MACD(data.Close, fastperiod=9, slowperiod=20, signalperiod=7)
-    #data['Close'] = round(up,2)
-    data['BB Up'] = round(up,2)
-    data['BB Mid'] = round(mid,2)
-    data['BB down'] = round(low,2)
-    data['RSI'] = round(rsi,2)
-    data['MACD'] = round(macd,4)
-    
-    data_df = pd.DataFrame()
-    data_df['Date'] = pd.to_datetime(data.Date).dt.date
-    data_df['Close'] = data['Close']
-    #data_df['BB Up'] = data['BB Up'] 
-    data_df['BB Mid'] = data['BB Mid']
-    #data_df['BB down'] = data['BB down']
-    data_df['RSI'] = data['RSI']
-    data_df['MACD'] = data['MACD']
-    sar_df = data.loc[:, ['Close', 'High', 'Low']]
-    sar_df['SAR'] = SAR(sar_df.High, sar_df.Low, 
-                      acceleration=0.02, # common value
-                      maximum=0.2) 
-    
-    data_df['SAR'] = sar_df['SAR']
-    
-#### Now calculate SMA's
-    
-
-    sma_df = pd.DataFrame()
-    sma_df = data_df.loc[:, ['Date','Close']]
-    for t in [9, 20, 50, 100]:
-        sma_df[f'SMA_{t}'] = round(SMA(sma_df.Close, timeperiod=t), 2)
-    
-    
-    data_df = data_df.dropna().sort_values(by=['Date'],ascending = False)
-    sma_df = sma_df.dropna().sort_values(by=['Date'],ascending = False)
-    data_df = data_df.set_index('Date')
-    sma_df = sma_df.set_index('Date')
-    #st.dataframe(data_df)
-    #st.dataframe(sma_df)
-    data_df['SMA_9'] = sma_df['SMA_9']
-    data_df['SMA_20'] = sma_df['SMA_20']
-    data_df['SMA_50'] = sma_df['SMA_50']
-    data_df['SMA_100'] = sma_df['SMA_100']
-    data_df  = data_df.head(8)
-    st.dataframe(data_df)
-
+    #data = yf.download(tickers = ticker, start= start_date , end=end_date)
+    data = get_historical_data(selected_ticker, start_date, end_date)
+    #data.columns = ['close', 'volume', 'open', 'high', 'low']
+    ohlc = data.sort_values(by=['Date'],ascending=True)
+    ta_df = pd.DataFrame()
+    ta_df['close'] = ohlc['close']
+    ta_df['SMA_9'] = round(TA.SMA(ohlc,9),2)
+    ta_df['SMA_20'] = round(TA.SMA(ohlc,20),2)
+    ta_df['SMA_50'] = round(TA.SMA(ohlc,50),2)
+    ta_df['SMA_100'] = round(TA.SMA(ohlc,100),2)
+    ta_df['MACD'] =  round(TA.MACD(ohlc),2)['MACD']
+    ta_df['SAR'] = round(TA.SAR(ohlc),2)
+    ta_df['BB_Upper'] = round(TA.MOBO(ohlc),2)['BB_UPPER']
+    #ta_df['BB_Middle'] = round(TA.MOBO(ohlc),2)['BB_MIDDLE']
+    ta_df['BB_Lower'] = round(TA.MOBO(ohlc),2)['BB_LOWER']
+    st.dataframe(ta_df.tail(8))
 ###### Next Plot the charts
-    ### Plotting SMA's
-    ax = sma_df.plot(figsize=(14, 6), rot=0, title = f"Moving Averages",)
-    ax.set_xlabel('')
-    sns.despine()
-    # Convert the matplotlib plot to Plotly
-    fig = go.Figure()
-    for line in ax.get_lines():
-        x, y = line.get_data()
-        fig.add_trace(go.Scatter(x=x, y=y, mode='lines', name=line.get_label()))
+    # Create a Matplotlib figure object
+    fig, ax = mpf.plot(data,
+                       mav=(int(20),int(50),int(100)),
+                       title=f'{selected_ticker}-> SMA(20/50/100)',
+                       volume=True,
+                       style=chart_style,
+                       type=chart_type,
+                       figsize=(15,10),
+                       panel_ratios=(4,1),
+                       tight_layout=True,
+                       returnfig=True
+                       )
     
-    st.plotly_chart(fig)
+    st.pyplot(fig)
     
-    ### Plotting SAR
-    ax = sar_df[['Close', 'SAR']].plot(figsize=(14, 5), style=['-', '--'], title='Parabolic SAR')
-    ax.set_xlabel('')
-    sns.despine()
-    plt.tight_layout()
-    st.pyplot(plt)
+    
+
 
 with col[2]:
      
