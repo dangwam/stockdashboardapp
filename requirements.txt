@@ -1,12 +1,11 @@
 streamlit
 pandas
 altair
-plotly.express
-plotly.graph_objects
+plotly
 yfinance
 yahooquery
 warnings
 datetime
 talib
-matplotlib.pyplot
+matplotlib
 seaborn

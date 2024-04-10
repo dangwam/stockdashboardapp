@@ -3,11 +3,11 @@ import altair as alt  # Import altair for themes
 import pandas as pd
 import yfinance as yf
 import warnings
-import plotly.express as px
+from plotly import express as px
 import datetime
-import matplotlib.pyplot as plt
+from matplotlib import pyplot as plt
 import seaborn as sns 
-import plotly.graph_objects as go
+from plotly import graph_objects as go
 from talib import RSI, BBANDS, MACD, HT_TRENDLINE, SAR, SMA
 #from financetoolkit import Toolkit
 from yahooquery import Ticker
