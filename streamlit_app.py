@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns 
 import plotly.graph_objects as go
 from talib import RSI, BBANDS, MACD, HT_TRENDLINE, SAR, SMA
-from financetoolkit import Toolkit
+#from financetoolkit import Toolkit
 from yahooquery import Ticker
 from yahooquery import Screener
 warnings.filterwarnings('ignore')
@@ -18,7 +18,7 @@ warnings.filterwarnings('ignore')
 s = Screener()
 
 #############################################
-#####API_KEY = "DZvlZlf0Q0sDAwwwh59Z90CVB05FjQlS"
+#####API_KEY 
 #############################################
 # Streamlit App Configuration (Best Practice)
 hide = """
