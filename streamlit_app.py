@@ -122,52 +122,8 @@ def load_data(symbol, start, end):
     return yf.download(symbol, start, end)
 
 @st.cache_data
-def yquery_summary_detail(symbol):
-    tk = Ticker(symbol)
-    summary_detail = tk.summary_detail
-    return summary_detail[symbol]
-
-@st.cache_data
-def yquery_technical_insights(symbol):
-    tk = Ticker(symbol)
-    technical_insights = tk.technical_insights
-    return technical_insights[symbol]
-
-
-@st.cache_data
-def yquery_valuation_measures(symbol):
-    tk = Ticker(symbol)
-    types = ['periodType','EnterprisesValueEBITDARatio', 'EnterprisesValueRevenueRatio', 'PeRatio']
-    answers = pd.DataFrame()
-    valuation_measures_df = tk.valuation_measures[types]
-    valuation_measures_df = valuation_measures_df[valuation_measures_df["periodType"] == "3M"]
-    answers['Duration'] = valuation_measures_df['periodType'].fillna('3M')
-    answers['EV_EBITDA'] = valuation_measures_df['EnterprisesValueEBITDARatio'].fillna('----')
-    answers['EV_REV'] = valuation_measures_df['EnterprisesValueRevenueRatio'].fillna('----')
-    answers['PE'] = valuation_measures_df['PeRatio'].fillna('----')
-                                    
-    return answers
-                              
-@st.cache_data
 def convert_df_to_csv(df):
     return df.to_csv().encode("utf-8")
-
-@st.cache_data
-def get_company_info(ticker):
-  symbol = ticker
-  tk = Ticker(symbol)
-  sp_dict = tk.asset_profile
-  overall_risk = sp_dict[symbol]['overallRisk']
-  num_employees = sp_dict[symbol]['fullTimeEmployees']
-  longBusinessSummary = sp_dict[symbol]['longBusinessSummary']
-  industry = sp_dict[symbol]['industry']
-  sector = sp_dict[symbol]['sector']
-  website = sp_dict[symbol]['website']
-  # This function will eventually fetch company information from an API based on ticker
-  # Replace this with your actual API call logic
-  # Sample company information (replace with actual data)
-  return industry, sector, longBusinessSummary, num_employees, website ,pd.DataFrame(tk.fund_ownership)
-# Available years (last 10 years)
 
 @st.cache_data
 def get_historical_data(symbol, start_date, end_date):
