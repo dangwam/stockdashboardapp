@@ -211,10 +211,12 @@ def get_dividend_yield(symbol):
         return f"Error occurred: {str(e)}"
 # Sidebar for user input
 #######################
+st.markdown('---')
+
+st.sidebar.subheader('Settings')
+st.sidebar.caption(":chart_with_upwards_trend: Stock Analysis")
 
 with st.sidebar:
-     st.sidebar.subheader('Settings')
-     st.sidebar.caption(":chart_with_upwards_trend: Stock Analysis")
      available_tickers, tickers_companies_dict = get_sp500_components()
      selected_ticker = st.sidebar.selectbox("Select Ticker", available_tickers, format_func=tickers_companies_dict.get)
      start_date = st.sidebar.date_input("Start date", datetime.date(2010, 1, 1))
