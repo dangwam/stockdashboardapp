@@ -4,6 +4,7 @@ import pandas as pd
 import yfinance as yf
 from finta import TA
 import mplfinance as mpf
+import yahooquery as yq
 from pandas_datareader import data as pdr
 from plotly import express as px
 import datetime
@@ -122,8 +123,44 @@ def load_data(symbol, start, end):
     return yf.download(symbol, start, end)
 
 @st.cache_data
+def get_company_info(ticker):
+  symbol = ticker
+  tk = Ticker(symbol)
+  sp_dict = tk.asset_profile
+  overall_risk = sp_dict[symbol]['overallRisk']
+  num_employees = sp_dict[symbol]['fullTimeEmployees']
+  longBusinessSummary = sp_dict[symbol]['longBusinessSummary']
+  industry = sp_dict[symbol]['industry']
+  sector = sp_dict[symbol]['sector']
+  website = sp_dict[symbol]['website']
+  return industry, sector, longBusinessSummary, num_employees, website ,pd.DataFrame(tk.fund_ownership)
+
+
+@st.cache_data
 def convert_df_to_csv(df):
     return df.to_csv().encode("utf-8")
+
+
+@st.cache_data
+def get_company_info(ticker):
+  symbol = ticker
+  tk = yq.Ticker(symbol)
+  sp_dict = tk.asset_profile
+  overall_risk = sp_dict[symbol]['overallRisk']
+  num_employees = sp_dict[symbol]['fullTimeEmployees']
+  longBusinessSummary = sp_dict[symbol]['longBusinessSummary']
+  industry = sp_dict[symbol]['industry']
+  sector = sp_dict[symbol]['sector']
+  website = sp_dict[symbol]['website']
+  return industry, sector, longBusinessSummary, num_employees, website ,pd.DataFrame(tk.fund_ownership)
+
+
+@st.cache_data
+def yquery_technical_insights(symbol):
+    tk = yq.Ticker(symbol)
+    technical_insights = tk.technical_insights
+    return technical_insights[symbol]
+
 
 @st.cache_data
 def get_historical_data(symbol, start_date, end_date):
@@ -251,28 +288,8 @@ st.markdown(hide, unsafe_allow_html=True)
 
 col = st.columns((2, 4.5, 2), gap='small')
 with col[0]:
-    
-    st.write("Financial summary(Millions)")
-    stock = Ticker(selected_ticker)
-    #balance_sheet = stock.balance_sheet
-    fin_df = stock.balance_sheet()
-    new_df = pd.DataFrame()
-    new_df['TotalAssets'] = fin_df['TotalAssets'] / 1000000
-    new_df['TotalDebt'] = fin_df['TotalDebt'] / 1000000
-    new_df['TotalAssets_Difference'] = fin_df['TotalAssets'].diff() / 1000000
-    new_df['TotalDebt_Difference'] = fin_df['TotalDebt'].diff() / 1000000
-    dividend_yield = get_dividend_yield(selected_ticker)
-    
-    st.metric(label="Total Asset", value=new_df.TotalAssets[0], delta=new_df.TotalAssets_Difference[1])
-    st.metric(label="TotalDebt", value=new_df.TotalDebt[0],delta=new_df.TotalDebt_Difference[1])
-    st.metric(label="Dividend Yeild", value=dividend_yield)
-
-    #st.markdown(lnk + htmlstr, unsafe_allow_html=True)
-
     st.markdown('#### Cumulative returns')
     monthly_prices = stock_df.resample('M').last()
-    #monthly returns
-
     outlier_cutoff = 0.01
     data = pd.DataFrame()
     lags = [1, 2, 3, 6, 9, 12]
@@ -293,21 +310,12 @@ with col[0]:
     temp_df['1 Month'] = data['return_1m']
     temp_df['3 Months'] = data['return_3m']
     temp_df['6 Months'] = data['return_6m']
-    #temp_df['9 Months'] = data['return_9m']
     temp_df['1 Year'] = data['return_12m']
     temp_df = temp_df.head(5)
     #st.dataframe(temp_df.style.format("{:.2%}").highlight_max(color='blue'),hide_index=True)
-    #st.table(temp_df)
     st.dataframe(temp_df.style.format({'1 Month': '{:.2f}', '3 Months': '{:.2f}','6 Months': '{:.2f}', '1 Year': '{:.2f}'}).highlight_max(color='blue'),hide_index=True)
-    
     st.markdown('#### Valuation Measures')
-    yq_valuation_measures = yquery_valuation_measures(selected_ticker)
-    st.dataframe(yq_valuation_measures, hide_index=True)
-
-    #st.markdown('Ratio Analysis')
-    #ratio_df = fetch_all_ratios(selected_ticker,start_date)
-    #st.dataframe(ratio_df)
-
+    
 with col[1]:
     chart_type = 'renko'
     chart_style = 'starsandstripes'
