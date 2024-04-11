@@ -9,11 +9,7 @@ from plotly import express as px
 import datetime
 from matplotlib import pyplot as plt
 from plotly import graph_objects as go
-from yahooquery import Ticker
-from yahooquery import Screener
 yf.pdr_override()
-
-s = Screener()
 
 #############################################
 #####API_KEY 
@@ -410,61 +406,7 @@ with col[1]:
 
 with col[2]:
      
-     st.markdown(" Market Today ")
-     industry = 'most_shorted_stocks'
-     #today = datetime.today().strftime('%Y%m%d')
-     st.write(f"Most Shorted Stocks")
-     my_dict = s.get_screeners([industry])
-     my_data_list = my_dict[industry]['quotes']
-
-     columns = ['symbol','regularMarketPrice', 'regularMarketVolume', 'fiftyTwoWeekRange','dividendYield','averageDailyVolume10Day', 'averageAnalystRating' ]
-     df_ss = pd.DataFrame(my_data_list, columns=columns)
-     #df_ss.set_index(keys=['symbol'], inplace = True)
-     df_ss = df_ss.head(5)
-     df_ss_out = pd.DataFrame()
-     df_ss_out['Stock'] = df_ss['symbol'].fillna('----')
-     df_ss_out['CMP'] = df_ss['regularMarketPrice'].fillna('----')
-     df_ss_out['VOL'] = df_ss['regularMarketVolume'].fillna('----')
-     df_ss_out['DIV'] = df_ss['dividendYield'].fillna('----')
-     df_ss_out['Rating'] = df_ss['averageAnalystRating'].fillna('----')
-     st.dataframe(df_ss_out,hide_index=True)
-
-
-    ####most_watched_tickers
-     st.write(f"Most Watched Tickers")
-     most_watched_tickers_dict = s.get_screeners(['most_watched_tickers'])
-     most_watched_tickers_data_list = most_watched_tickers_dict['most_watched_tickers']['quotes']
-     columns = ['symbol', 'fiftyTwoWeekRange', 'regularMarketPrice','regularMarketVolume', 'averageDailyVolume3Month','averageAnalystRating' ]
-     df_most_watched_tickers = pd.DataFrame(most_watched_tickers_data_list, columns=columns)
-     #df_most_watched_tickers.set_index(keys=['symbol'], inplace = True)
-     df_most_watched_tickers = df_most_watched_tickers.head(5)
-     df_mwt_out = pd.DataFrame()
-     df_mwt_out['Stock'] = df_most_watched_tickers['symbol'].fillna('----')
-     df_mwt_out['52wkRange'] = df_most_watched_tickers['fiftyTwoWeekRange'].fillna('----')
-     df_mwt_out['CMP'] = df_most_watched_tickers['regularMarketVolume'].fillna('----')
-     df_mwt_out['Rating'] = df_most_watched_tickers['averageAnalystRating'].fillna('----')
-     st.dataframe(df_mwt_out, hide_index=True)
-
-     #### most active
-     st.write(f"Undervalued- Growth Stocks")
-     industry = 'undervalued_growth_stocks'
-     columns = ['symbol', 'averageAnalystRating', 'regularMarketPrice', 'fiftyTwoWeekRange','priceToBook', 'marketCap', 'forwardPE', 'priceEpsCurrentYear', 'bookValue']
-     #my_dict = industry + '_dict'
-     industry_data_list = industry + '_data_list'
-     #my_df = 'df_' + industry
-     ugs_dict = s.get_screeners([industry])
-     my_data_list = ugs_dict[industry]['quotes']
-
-     undervalued_growth_stocks_df = pd.DataFrame(my_data_list, columns=columns)
-     #undervalued_growth_stocks_df.set_index(keys=['symbol'], inplace = True)
-     undervalued_growth_stocks_df = undervalued_growth_stocks_df.head(5)
-     ugs_df = pd.DataFrame()
-     ugs_df['Stock'] = undervalued_growth_stocks_df['symbol'].fillna('----')
-     ugs_df['Rating'] = undervalued_growth_stocks_df['averageAnalystRating'].fillna('----')
-     ugs_df['CMP'] = undervalued_growth_stocks_df['regularMarketPrice'].fillna('----')
-     ugs_df['52wkRange'] = undervalued_growth_stocks_df['fiftyTwoWeekRange'].fillna('----')
-     ugs_df['MCAP'] = undervalued_growth_stocks_df['marketCap'].fillna('----')
-     st.dataframe(ugs_df, hide_index=True)
+     st.markdown("TBD")
      
 
 
