@@ -141,10 +141,16 @@ def yquery_technical_insights(symbol):
 @st.cache_data
 def yquery_valuation_measures(symbol):
     tk = Ticker(symbol)
-    types = ['periodType','EnterprisesValueEBITDARatio', 'EnterprisesValueRevenueRatio', 'PeRatio', 'PbRatio','PegRatio','PsRatio']
+    types = ['periodType','EnterprisesValueEBITDARatio', 'EnterprisesValueRevenueRatio', 'PeRatio']
+    answers = pd.DataFrame()
     valuation_measures_df = tk.valuation_measures[types]
     valuation_measures_df = valuation_measures_df[valuation_measures_df["periodType"] == "3M"]
-    return valuation_measures_df
+    answers['Duration'] = valuation_measures_df['periodType'].fillna('3M')
+    answers['EV_EBITDA'] = valuation_measures_df['EnterprisesValueEBITDARatio'].fillna('----')
+    answers['EV_REV'] = valuation_measures_df['EnterprisesValueRevenueRatio'].fillna('----')
+    answers['PE'] = valuation_measures_df['PeRatio'].fillna('----')
+                                    
+    return answers
                               
 @st.cache_data
 def convert_df_to_csv(df):
@@ -187,6 +193,22 @@ def format_number(num):
         return f'{round(num / 1000000, 1)} M'
     return f'{num // 1000} K'
 
+def get_dividend_yield(symbol):
+    try:
+        # Download the stock data
+        stock = yf.Ticker(symbol)
+        
+        # Get dividend yield
+        dividend_yield = stock.info.get('dividendYield')
+        
+        if dividend_yield is not None:
+            # Format dividend yield to display correct number of decimal places
+            formatted_yield = "{:.2%}".format(dividend_yield)
+            return formatted_yield
+        else:
+            return "NIL"
+    except Exception as e:
+        return f"Error occurred: {str(e)}"
 # Sidebar for user input
 #######################
 
@@ -273,32 +295,23 @@ with st.sidebar.expander(expander_title):
 #st.write("Summary")
 st.markdown(hide, unsafe_allow_html=True)
 
-col = st.columns((1.5, 4.5, 2.5), gap='small')
+col = st.columns((2, 4.5, 2), gap='small')
 with col[0]:
     
     st.write("Financial summary(Millions)")
     stock = Ticker(selected_ticker)
     #balance_sheet = stock.balance_sheet
     fin_df = stock.balance_sheet()
-    #Total Debt, Ordinary Shares Number, Tangible Book Value, Common Stock Equity, Total Capitalization, 
-    #TotalAssets	TotalCapitalization	TotalDebt StockholdersEquity CashFinancial
-    #columns = ['TotalAssets', 'TotalCapitalization', 'TotalDebt', 'StockholdersEquity', 'CashFinancial']
-    # Extract the columns and assign them to the new DataFrame
     new_df = pd.DataFrame()
     new_df['TotalAssets'] = fin_df['TotalAssets'] / 1000000
-    new_df['TotalCapitalization'] = fin_df['TotalCapitalization'] /  1000000
     new_df['TotalDebt'] = fin_df['TotalDebt'] / 1000000
-    new_df['StockholdersEquity'] = fin_df['StockholdersEquity'] / 1000000
-    ##
     new_df['TotalAssets_Difference'] = fin_df['TotalAssets'].diff() / 1000000
     new_df['TotalDebt_Difference'] = fin_df['TotalDebt'].diff() / 1000000
-    new_df['StockholdersEquity_Difference'] = fin_df['StockholdersEquity'].diff() / 1000000
-    ##
-    ##
-    #new_df = new_df.dropna()
+    dividend_yield = get_dividend_yield(selected_ticker)
+    
     st.metric(label="Total Asset", value=new_df.TotalAssets[0], delta=new_df.TotalAssets_Difference[1])
     st.metric(label="TotalDebt", value=new_df.TotalDebt[0],delta=new_df.TotalDebt_Difference[1])
-    st.metric(label="Stockholders Equity", value=new_df.StockholdersEquity[0],delta=new_df.StockholdersEquity_Difference[1])
+    st.metric(label="Dividend Yeild", value=dividend_yield)
 
     #st.markdown(lnk + htmlstr, unsafe_allow_html=True)
 
@@ -369,7 +382,12 @@ with col[1]:
     ta_df['BB_Upper'] = round(TA.MOBO(ohlc),2)['BB_UPPER']
     #ta_df['BB_Middle'] = round(TA.MOBO(ohlc),2)['BB_MIDDLE']
     ta_df['BB_Lower'] = round(TA.MOBO(ohlc),2)['BB_LOWER']
-    st.dataframe(ta_df.tail(5))
+    ta_df = ta_df.tail(5)
+    ta_df = ta_df.reset_index()
+    ta_df["Date"] = pd.to_datetime(ta_df["Date"])
+    ta_df["Date"] = ta_df["Date"].dt.strftime("%Y-%m-%d")
+    st.dataframe(ta_df, hide_index=True)
+    
 ###### Next Plot the charts
     # Create a Matplotlib figure object
     fig, ax = mpf.plot(data,
@@ -378,7 +396,6 @@ with col[1]:
                        volume=True,
                        style=chart_style,
                        type=chart_type,
-                       figsize=(15,10),
                        panel_ratios=(4,1),
                        tight_layout=True,
                        returnfig=True
@@ -400,9 +417,15 @@ with col[2]:
 
      columns = ['symbol','regularMarketPrice', 'regularMarketVolume', 'fiftyTwoWeekRange','dividendYield','averageDailyVolume10Day', 'averageAnalystRating' ]
      df_ss = pd.DataFrame(my_data_list, columns=columns)
-     df_ss.set_index(keys=['symbol'], inplace = True)
+     #df_ss.set_index(keys=['symbol'], inplace = True)
      df_ss = df_ss.head(5)
-     st.dataframe(df_ss,hide_index=False)
+     df_ss_out = pd.DataFrame()
+     df_ss_out['Stock'] = df_ss['symbol'].fillna('----')
+     df_ss_out['CMP'] = df_ss['regularMarketPrice'].fillna('----')
+     df_ss_out['VOL'] = df_ss['regularMarketVolume'].fillna('----')
+     df_ss_out['DIV'] = df_ss['dividendYield'].fillna('----')
+     df_ss_out['Rating'] = df_ss['averageAnalystRating'].fillna('----')
+     st.dataframe(df_ss_out,hide_index=True)
 
 
     ####most_watched_tickers
@@ -411,24 +434,35 @@ with col[2]:
      most_watched_tickers_data_list = most_watched_tickers_dict['most_watched_tickers']['quotes']
      columns = ['symbol', 'fiftyTwoWeekRange', 'regularMarketPrice','regularMarketVolume', 'averageDailyVolume3Month','averageAnalystRating' ]
      df_most_watched_tickers = pd.DataFrame(most_watched_tickers_data_list, columns=columns)
-     df_most_watched_tickers.set_index(keys=['symbol'], inplace = True)
+     #df_most_watched_tickers.set_index(keys=['symbol'], inplace = True)
      df_most_watched_tickers = df_most_watched_tickers.head(5)
-     st.dataframe(df_most_watched_tickers)
+     df_mwt_out = pd.DataFrame()
+     df_mwt_out['Stock'] = df_most_watched_tickers['symbol'].fillna('----')
+     df_mwt_out['52wkRange'] = df_most_watched_tickers['fiftyTwoWeekRange'].fillna('----')
+     df_mwt_out['CMP'] = df_most_watched_tickers['regularMarketVolume'].fillna('----')
+     df_mwt_out['Rating'] = df_most_watched_tickers['averageAnalystRating'].fillna('----')
+     st.dataframe(df_mwt_out, hide_index=True)
 
      #### most active
-     st.write(f"undervalued_growth_stocks")
+     st.write(f"Undervalued- Growth Stocks")
      industry = 'undervalued_growth_stocks'
      columns = ['symbol', 'averageAnalystRating', 'regularMarketPrice', 'fiftyTwoWeekRange','priceToBook', 'marketCap', 'forwardPE', 'priceEpsCurrentYear', 'bookValue']
-     my_dict = industry + '_dict'
-     my_data_list = industry + '_data_list'
-     my_df = 'df_' + industry
-     my_dict = s.get_screeners([industry])
-     my_data_list = my_dict[industry]['quotes']
+     #my_dict = industry + '_dict'
+     industry_data_list = industry + '_data_list'
+     #my_df = 'df_' + industry
+     ugs_dict = s.get_screeners([industry])
+     my_data_list = ugs_dict[industry]['quotes']
 
      undervalued_growth_stocks_df = pd.DataFrame(my_data_list, columns=columns)
-     undervalued_growth_stocks_df.set_index(keys=['symbol'], inplace = True)
+     #undervalued_growth_stocks_df.set_index(keys=['symbol'], inplace = True)
      undervalued_growth_stocks_df = undervalued_growth_stocks_df.head(5)
-     st.dataframe(undervalued_growth_stocks_df)
+     ugs_df = pd.DataFrame()
+     ugs_df['Stock'] = undervalued_growth_stocks_df['symbol'].fillna('----')
+     ugs_df['Rating'] = undervalued_growth_stocks_df['averageAnalystRating'].fillna('----')
+     ugs_df['CMP'] = undervalued_growth_stocks_df['regularMarketPrice'].fillna('----')
+     ugs_df['52wkRange'] = undervalued_growth_stocks_df['fiftyTwoWeekRange'].fillna('----')
+     ugs_df['MCAP'] = undervalued_growth_stocks_df['marketCap'].fillna('----')
+     st.dataframe(ugs_df, hide_index=True)
      
 
 
