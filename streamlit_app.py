@@ -7,6 +7,7 @@ import mplfinance as mpf
 import yahooquery as yq
 from pandas_datareader import data as pdr
 from plotly import express as px
+import plotly.graph_objs as go
 import datetime
 from matplotlib import pyplot as plt
 from plotly import graph_objects as go
@@ -43,7 +44,7 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded")
 
-alt.themes.enable("dark")
+#alt.themes.enable("dark")
 
 #######################
 # CSS styling
@@ -307,8 +308,6 @@ with st.sidebar:
          fig = px.line(stock_df, x=stock_df.index, y=stock_df.columns,title = f"Closing Prices vs Benchmark", template= 'simple_white' )
 #fig.update_traces(line_color = 'purple')
      st.sidebar.plotly_chart(fig,use_container_width=True)
-     #color_theme_list = ['blues', 'cividis', 'greens', 'inferno', 'magma', 'plasma', 'reds', 'rainbow', 'turbo', 'viridis']
-     #selected_color_theme = st.selectbox('Select a color theme', color_theme_list)
      # Fetch company information from asset profile
      if selected_ticker not in ['SPY', 'QQQ' ]:
          industry, sector, longBusinessSummary, num_employees, website, fund_ownership = get_company_info(selected_ticker)
@@ -490,7 +489,7 @@ with col[1]:
     
 
 with col[2]:
-     # Create a Matplotlib figure object
+    # Create a Matplotlib figure object
     title=f'20/50/100 SMA for {selected_ticker} '
     st.caption(title)
     fig, ax = mpf.plot(data,
@@ -505,13 +504,75 @@ with col[2]:
                        )
     
     st.pyplot(fig)
-    st.dataframe(data)
+    #################################
+    third_col = st.columns((2,1))
+    with third_col[1]:
+        st.write('FibLevels')
+        spy_data = data.copy()
+        # Find the start and end dates
+        start_date = spy_data.index[0]
+        end_date = spy_data.index[-1]
+        # Find the close price for the start and end dates
+        start_close = spy_data.loc[start_date, 'close']
+        end_close = spy_data.loc[end_date, 'close']
+        # Calculate Fibonacci levels
+        # We'll consider Fibonacci retracement levels from the top (end_close) to the bottom (start_close)
+        fib_levels = [0, 23.6, 38.2, 50, 61.8, 100]  # Fibonacci retracement levels in percentage
+        fib_prices = {}
+        for level in fib_levels:
+            fib_price = end_close - (level / 100) * (end_close - start_close)
+            fib_prices[level] = fib_price
 
-
+        # Convert the result to a DataFrame
+        fib_df = pd.DataFrame.from_dict(fib_prices, orient='index', columns=['Price'])
+        fib_df.index.name = 'Fib Levels'
+        fib_df = fib_df.sort_index(ascending=False)
+        #fib_df=fib_df.reset_index()
+        st.dataframe(fib_df,
+                    column_order=("Level", "Price"),
+                    hide_index=True,
+                    width=None,
+                    column_config={
+                        "FibLevel": st.column_config.NumberColumn(
+                            "Fib",
+                            format ="%d",
+                            width="small"
+                        ),
+                        "Price": st.column_config.NumberColumn(
+                            "Price",
+                            format="$ %d",
+                            width="small"
+                        )}
+                    )
     
+    ##############################
+    with third_col[0]:
+        st.write('Volume Profile')
+        data.index = data.index.date
+        data=data.sort_index(ascending=False).head(6)
+        vol_df = pd.DataFrame()
+        vol_df['volume'] = data['volume']
+        vol_df = vol_df.reset_index()
+        #st.markdown('##### Volume Profile')
+        st.dataframe(vol_df,
+                    column_order=("index", "volume"),
+                    hide_index=True,
+                    width=None,
+                    column_config={
+                        "index": st.column_config.DateColumn(
+                            "Date",
+                            format ="MMMM Do",
+                            width="small"
+                        ),
+                        "volume": st.column_config.ProgressColumn(
+                            "volume",
+                            format="%f",
+                            min_value=0,
+                            max_value=max(vol_df.volume)
+                        )}
+                    )
     
-
-        
+   
 
 
 
