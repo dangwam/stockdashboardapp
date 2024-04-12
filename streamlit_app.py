@@ -348,7 +348,7 @@ with st.sidebar:
      chart_types = [
         'candle', 'ohlc', 'line', 'renko', 'pnf'
      ]
-     chart_type = st.selectbox('Chart type', options=chart_types, index=chart_types.index('candle'))
+     #chart_type = st.selectbox('Chart type', options=chart_types, index=chart_types.index('candle'))
 
 
 
@@ -437,10 +437,15 @@ with col[1]:
         ta_df = ta_df.reset_index()
         ta_df["Date"] = pd.to_datetime(ta_df["Date"])
         ta_df["Date"] = ta_df["Date"].dt.strftime("%Y-%m-%d")
+        
+        st.dataframe(ta_df, hide_index=True)
+          
+
             
 ###### Next Plot the charts
     ###-----------------------------------------------------------------------------------------------------###
-        df = data.copy()
+        df = data.tail(400).copy()
+               
         #Get the 26-day EMA of the closing price
         k = df['close'].ewm(span=12, adjust=False, min_periods=12).mean()
 
@@ -485,27 +490,25 @@ with col[1]:
                 returnfig=True
                 )
         st.pyplot(fig)
-        st.dataframe(ta_df, hide_index=True)
-    
-
+        
 with col[2]:
     # Create a Matplotlib figure object
     title=f'20/50/100 SMA for {selected_ticker} '
     st.caption(title)
-    fig, ax = mpf.plot(data,
+    fig, ax = mpf.plot(data.tail(200),
                        mav=(int(20),int(50),int(100)),
                        title=title,
                        volume=False,
                        style=chart_style,
-                       type=chart_type,
+                       type='line',
                        figsize=(15,10),
-                       tight_layout=True,
+                       #tight_layout=True,
                        returnfig=True
                        )
     
     st.pyplot(fig)
     #################################
-    third_col = st.columns((2,1))
+    third_col = st.columns((2.75,1))
     with third_col[1]:
         st.write('FibLevels')
         spy_data = data.copy()
@@ -546,31 +549,41 @@ with col[2]:
                     )
     
     ##############################
-    with third_col[0]:
-        st.write('Volume Profile')
-        data.index = data.index.date
-        data=data.sort_index(ascending=False).head(6)
-        vol_df = pd.DataFrame()
-        vol_df['volume'] = data['volume']
-        vol_df = vol_df.reset_index()
-        #st.markdown('##### Volume Profile')
-        st.dataframe(vol_df,
-                    column_order=("index", "volume"),
-                    hide_index=True,
-                    width=None,
-                    column_config={
-                        "index": st.column_config.DateColumn(
-                            "Date",
-                            format ="MMMM Do",
-                            width="small"
-                        ),
-                        "volume": st.column_config.ProgressColumn(
-                            "volume",
-                            format="%f",
-                            min_value=0,
-                            max_value=max(vol_df.volume)
-                        )}
-                    )
+        with third_col[0]:
+            st.write('Volume Profile')
+            data.index = data.index.date
+            data=data.sort_index(ascending=False).head(6)
+            vol_df = pd.DataFrame()
+            vol_df['volume'] = data['volume']
+            vol_df = vol_df.reset_index()
+            #st.markdown('##### Volume Profile')
+            st.dataframe(vol_df,
+                        column_order=("index", "volume"),
+                        hide_index=True,
+                        width=None,
+                        column_config={
+                            "index": st.column_config.DateColumn(
+                                "Date",
+                                format ="MMMM Do",
+                                width="small"
+                            ),
+                            "volume": st.column_config.ProgressColumn(
+                                "volume",
+                                format="%f",
+                                min_value=0,
+                                max_value=max(vol_df.volume)
+                            )}
+                        )
+            
+    with st.expander('About', expanded=True):
+        st.write('''
+            - Data: [yfinance](https://finance.yahoo.com/)
+            - :orange[**Summary**]: power of technical & financial analysis in single app
+            - :orange[**Developer**]: mayank.dangwal2019@gmail.com
+            - :orange[**Future**]: alphatrend chart & other powerfull indicators,additional fundamental analysis features.)
+            - :blue[**Version**]: [git](https://github.com/dangwam/stockdashboardapp.git)
+                 
+            ''')
     
    
 
