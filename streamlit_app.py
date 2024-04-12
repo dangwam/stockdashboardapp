@@ -128,13 +128,13 @@ def get_company_info(ticker):
   symbol = ticker
   tk = Ticker(symbol)
   sp_dict = tk.asset_profile
-  overall_risk = sp_dict[symbol]['overallRisk']
-  num_employees = sp_dict[symbol]['fullTimeEmployees']
+  #overall_risk = sp_dict[symbol]['overallRisk']
+  #num_employees = sp_dict[symbol]['fullTimeEmployees']
   longBusinessSummary = sp_dict[symbol]['longBusinessSummary']
-  industry = sp_dict[symbol]['industry']
-  sector = sp_dict[symbol]['sector']
-  website = sp_dict[symbol]['website']
-  return industry, sector, longBusinessSummary, num_employees, website ,pd.DataFrame(tk.fund_ownership)
+  #industry = sp_dict[symbol]['industry']
+  #sector = sp_dict[symbol]['sector']
+  #website = sp_dict[symbol]['website']
+  return longBusinessSummary,pd.DataFrame(tk.fund_ownership)
 
 
 @st.cache_data
@@ -147,13 +147,13 @@ def get_company_info(ticker):
   symbol = ticker
   tk = yq.Ticker(symbol)
   sp_dict = tk.asset_profile
-  overall_risk = sp_dict[symbol]['overallRisk']
-  num_employees = sp_dict[symbol]['fullTimeEmployees']
+  #overall_risk = sp_dict[symbol]['overallRisk']
+  #num_employees = sp_dict[symbol]['fullTimeEmployees']
   longBusinessSummary = sp_dict[symbol]['longBusinessSummary']
-  industry = sp_dict[symbol]['industry']
-  sector = sp_dict[symbol]['sector']
-  website = sp_dict[symbol]['website']
-  return industry, sector, longBusinessSummary, num_employees, website ,pd.DataFrame(tk.fund_ownership)
+  #industry = sp_dict[symbol]['industry']
+  #sector = sp_dict[symbol]['sector']
+  #website = sp_dict[symbol]['website']
+  return longBusinessSummary,pd.DataFrame(tk.fund_ownership)
 
 
 @st.cache_data
@@ -257,12 +257,12 @@ def gen_macd_color(df):
 
 # Sidebar for user input
 #######################
-st.markdown('---')
+#st.markdown('---')
 
-st.sidebar.subheader('Settings')
-st.sidebar.caption(":chart_with_upwards_trend: Stock Analysis")
+#st.sidebar.subheader('Settings')
+#st.sidebar.caption(":chart_with_upwards_trend: Stock Analysis")
 
-with st.sidebar:
+with st.sidebar.form('inputs'):
      available_tickers, tickers_companies_dict = get_sp500_components()
      selected_ticker = st.sidebar.selectbox("Select Ticker", available_tickers, format_func=tickers_companies_dict.get)
      start_date = st.sidebar.date_input("Start date", datetime.date(2010, 1, 1))
@@ -285,7 +285,7 @@ with st.sidebar:
 
         out_str = out_str + " --- " + temp_str
       
-     expander_title = f"Key Stats for {selected_ticker}"
+     expander_title = f"{selected_ticker} Stats."
      with st.sidebar.expander(expander_title):
             #st.write(out_str)
             #st.markdown(hide, unsafe_allow_html=True)
@@ -310,7 +310,7 @@ with st.sidebar:
      st.sidebar.plotly_chart(fig,use_container_width=True)
      # Fetch company information from asset profile
      if selected_ticker not in ['SPY', 'QQQ' ]:
-         industry, sector, longBusinessSummary, num_employees, website, fund_ownership = get_company_info(selected_ticker)
+         longBusinessSummary,fund_ownership = get_company_info(selected_ticker)
          st.sidebar.write("Key Information")
      else:
          longBusinessSummary = "Selecteed ASSET is an ETF and does not have a summary information at this time"
@@ -319,38 +319,38 @@ with st.sidebar:
      #selected_color_theme = st.selectbox('Select a color theme', color_theme_list)    
      
      
-expander_title = f"Business Summary of {selected_ticker}"
-with st.sidebar.expander(expander_title):
-     st.write(longBusinessSummary)
-     st.markdown(hide, unsafe_allow_html=True)
-
-
-expander_title = f"FundOwnership {selected_ticker}"
-with st.sidebar.expander(expander_title):
-     if selected_ticker not in ['SPY', 'QQQ']:
-         fund_ownership.reset_index(inplace=True)
-         fund_ownership.drop(fund_ownership.columns[[0, 1]], axis=1, inplace=True)
-         st.dataframe(fund_ownership.iloc[:5, 2:])
-         st.markdown(hide, unsafe_allow_html=True)
-     else:
+     expander_title = f"Business Summary"
+     with st.sidebar.expander(expander_title):
          st.write(longBusinessSummary)
          st.markdown(hide, unsafe_allow_html=True)
 
-with st.sidebar:
-     chart_styles = [
-        'default', 'binance', 'blueskies', 'brasil', 
-        'charles', 'checkers', 'classic', 'yahoo',
-        'mike', 'nightclouds', 'sas', 'starsandstripes'
-      ]
-    
-     chart_style = st.selectbox('Chart style', options=chart_styles, index=chart_styles.index('starsandstripes'))
-    
-     chart_types = [
-        'candle', 'ohlc', 'line', 'renko', 'pnf'
-     ]
-     #chart_type = st.selectbox('Chart type', options=chart_types, index=chart_types.index('candle'))
 
+     expander_title = f"FundOwnership"
+     with st.sidebar.expander(expander_title):
+        if selected_ticker not in ['SPY', 'QQQ']:
+            fund_ownership.reset_index(inplace=True)
+            fund_ownership.drop(fund_ownership.columns[[0, 1]], axis=1, inplace=True)
+            st.dataframe(fund_ownership.iloc[:5, 2:])
+            st.markdown(hide, unsafe_allow_html=True)
+        else:
+            st.write(longBusinessSummary)
+            st.markdown(hide, unsafe_allow_html=True)
 
+     with st.sidebar:
+        chart_styles = [
+            'default', 'binance', 'blueskies', 'brasil', 
+            'charles', 'checkers', 'classic', 'yahoo',
+            'mike', 'nightclouds', 'sas', 'starsandstripes'
+        ]
+        
+        chart_style = st.selectbox('Chart style', options=chart_styles, index=chart_styles.index('starsandstripes'))
+        
+        chart_types = [
+            'candle', 'ohlc', 'line', 'renko', 'pnf'
+        ]
+        #chart_type = st.selectbox('Chart type', options=chart_types, index=chart_types.index('candle'))
+
+     st.form_submit_button('Refresh')
 
 #######################
 # Dashboard Main Panel
