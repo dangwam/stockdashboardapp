@@ -182,6 +182,7 @@ def format_number(num):
         return f'{round(num / 1000000, 1)} M'
     return f'{num // 1000} K'
 
+@st.cache_data
 def get_dividend_yield(symbol):
     try:
         # Download the stock data
@@ -195,9 +196,64 @@ def get_dividend_yield(symbol):
             formatted_yield = "{:.2%}".format(dividend_yield)
             return formatted_yield
         else:
-            return "NIL"
+            return "N/A"
     except Exception as e:
         return f"Error occurred: {str(e)}"
+
+
+def fetch_financials(symbol):
+    stock_obj = yf.Ticker(selected_ticker)
+    quarterly_financials = stock_obj.quarterly_financials.T
+    # Get the quarterly cash flow data for the last 8 quarters
+    quarterly_cashflow = stock_obj.quarterly_cashflow.T
+    # Get the quarterly balance sheet data for the last 8 quarters
+    quarterly_balancesheet = stock_obj.quarterly_balance_sheet.T
+    # columns of interest
+    income_cols = ["EBIT", "Total Expenses", "Basic EPS", "Diluted Average Shares"]
+    cash_cols = ["Free Cash Flow", "Capital Expenditure", "Changes In Cash"]
+    balance_sheet_cols = ["Common Stock Equity", "Total Debt","Net Tangible Assets", "Total Capitalization"]
+
+    quarterly_financials = quarterly_financials[income_cols].applymap(format_number)
+    quarterly_cashflow = quarterly_cashflow[cash_cols].applymap(format_number)
+    quarterly_balancesheet = quarterly_balancesheet[balance_sheet_cols].applymap(format_number)
+
+    quarterly_financials.index = quarterly_financials.index.date
+    quarterly_cashflow.index = quarterly_cashflow.index.date
+    quarterly_balancesheet.index = quarterly_balancesheet.index.date
+
+    income_cols_formatted = ["Revenue", "Expenses", "EPS", "AvgShares"]
+    cash_cols_formatted = ["FreeCashFlow", "Capex", "CashBurn"]
+    balance_sheet_cols_formatted = ["Equity", "Debt","Assets", "Capital"]
+
+    quarterly_financials.columns = income_cols_formatted
+    quarterly_cashflow.columns = cash_cols_formatted
+    quarterly_balancesheet.columns = balance_sheet_cols_formatted
+
+    return quarterly_financials, quarterly_cashflow, quarterly_balancesheet
+
+#Generating Colors For Histogram
+def gen_macd_color(df):
+    macd_color = []
+    macd_color.clear()
+    for i in range (0,len(df["MACDh_12_26_9"])):
+        if df["MACDh_12_26_9"][i] >= 0 and df["MACDh_12_26_9"][i-1] < df["MACDh_12_26_9"][i]:
+            macd_color.append('#26A69A')
+            #print(i,'green')
+        elif df["MACDh_12_26_9"][i] >= 0 and df["MACDh_12_26_9"][i-1] > df["MACDh_12_26_9"][i]:
+            macd_color.append('#B2DFDB')
+            #print(i,'faint green')
+        elif df["MACDh_12_26_9"][i] < 0 and df["MACDh_12_26_9"][i-1] > df["MACDh_12_26_9"][i] :
+            #print(i,'red')
+            macd_color.append('#FF5252')
+        elif df["MACDh_12_26_9"][i] < 0 and df["MACDh_12_26_9"][i-1] < df["MACDh_12_26_9"][i] :
+            #print(i,'faint red')
+            macd_color.append('#FFCDD2')
+        else:
+            macd_color.append('#000000')
+            #print(i,'no')
+    return macd_color
+
+
 # Sidebar for user input
 #######################
 st.markdown('---')
@@ -254,14 +310,15 @@ with st.sidebar:
      #color_theme_list = ['blues', 'cividis', 'greens', 'inferno', 'magma', 'plasma', 'reds', 'rainbow', 'turbo', 'viridis']
      #selected_color_theme = st.selectbox('Select a color theme', color_theme_list)
      # Fetch company information from asset profile
-     if selected_ticker != 'SPY':
+     if selected_ticker not in ['SPY', 'QQQ' ]:
          industry, sector, longBusinessSummary, num_employees, website, fund_ownership = get_company_info(selected_ticker)
          st.sidebar.write("Key Information")
      else:
          longBusinessSummary = "Selecteed ASSET is an ETF and does not have a summary information at this time"
 
-     color_theme_list = ['blues', 'cividis', 'greens', 'inferno', 'magma', 'plasma', 'reds', 'rainbow', 'turbo', 'viridis']
-     selected_color_theme = st.selectbox('Select a color theme', color_theme_list)    
+     # = ['blues', 'cividis', 'greens', 'inferno', 'magma', 'plasma', 'reds', 'rainbow', 'turbo', 'viridis']
+     #selected_color_theme = st.selectbox('Select a color theme', color_theme_list)    
+     
      
 expander_title = f"Business Summary of {selected_ticker}"
 with st.sidebar.expander(expander_title):
@@ -271,7 +328,7 @@ with st.sidebar.expander(expander_title):
 
 expander_title = f"FundOwnership {selected_ticker}"
 with st.sidebar.expander(expander_title):
-     if selected_ticker != 'SPY':
+     if selected_ticker not in ['SPY', 'QQQ']:
          fund_ownership.reset_index(inplace=True)
          fund_ownership.drop(fund_ownership.columns[[0, 1]], axis=1, inplace=True)
          st.dataframe(fund_ownership.iloc[:5, 2:])
@@ -280,13 +337,28 @@ with st.sidebar.expander(expander_title):
          st.write(longBusinessSummary)
          st.markdown(hide, unsafe_allow_html=True)
 
+with st.sidebar:
+     chart_styles = [
+        'default', 'binance', 'blueskies', 'brasil', 
+        'charles', 'checkers', 'classic', 'yahoo',
+        'mike', 'nightclouds', 'sas', 'starsandstripes'
+      ]
+    
+     chart_style = st.selectbox('Chart style', options=chart_styles, index=chart_styles.index('starsandstripes'))
+    
+     chart_types = [
+        'candle', 'ohlc', 'line', 'renko', 'pnf'
+     ]
+     chart_type = st.selectbox('Chart type', options=chart_types, index=chart_types.index('candle'))
+
+
 
 #######################
 # Dashboard Main Panel
 #st.write("Summary")
 st.markdown(hide, unsafe_allow_html=True)
 
-col = st.columns((2, 4.5, 2), gap='small')
+col = st.columns((1, 3, 1.25), gap='small')
 with col[0]:
     st.markdown('#### Cumulative returns')
     monthly_prices = stock_df.resample('M').last()
@@ -311,69 +383,129 @@ with col[0]:
     temp_df['3 Months'] = data['return_3m']
     temp_df['6 Months'] = data['return_6m']
     temp_df['1 Year'] = data['return_12m']
-    temp_df = temp_df.head(5)
+    temp_df = temp_df.head(2)
     #st.dataframe(temp_df.style.format("{:.2%}").highlight_max(color='blue'),hide_index=True)
     st.dataframe(temp_df.style.format({'1 Month': '{:.2f}', '3 Months': '{:.2f}','6 Months': '{:.2f}', '1 Year': '{:.2f}'}).highlight_max(color='blue'),hide_index=True)
-    st.markdown('#### Valuation Measures')
+    dividend_yield = get_dividend_yield(selected_ticker)
+    if not dividend_yield:
+        st.metric(label="Dividend Yeild", value="N/A")
+    else:
+        st.metric(label="Dividend Yeild", value=dividend_yield)
+
+    #################################################################
+    
+    # Get the quarterly financial data for the last 8 quarters
+    if selected_ticker not in ['SPY', 'QQQ']:
+        quarterly_financials, quarterly_cashflow, quarterly_balancesheet = fetch_financials(selected_ticker)
+        st.caption('#### Income')
+        st.dataframe(quarterly_financials)
+        st.caption('#### cashFlow')
+        st.dataframe(quarterly_cashflow)
+        st.caption('#### BalSheet')
+        st.dataframe(quarterly_balancesheet)
+
+
     
 with col[1]:
-    chart_type = 'renko'
-    chart_style = 'starsandstripes'
-    ticker = selected_ticker
-    period = "1d"
-    interval = "15m"
-    st.markdown(f"Technical Analysis of {selected_ticker}")
-    technical_insights = yquery_technical_insights(selected_ticker)
-    short_term_outlook = technical_insights['instrumentInfo']['technicalEvents']['shortTermOutlook']
-    st_state_description = short_term_outlook['stateDescription']
-    st_outlook_direction = short_term_outlook['direction']
-    st.write(f"Short term Outlook :- {st_state_description}....Direction is {st_outlook_direction}")
+        #chart_type = 'renko'
+        #chart_style = 'starsandstripes'
+        ticker = selected_ticker
+        period = "1d"
+        interval = "15m"
+        #st.markdown(f"Technical Analysis of {selected_ticker}")
+        technical_insights = yquery_technical_insights(selected_ticker)
+        short_term_outlook = technical_insights['instrumentInfo']['technicalEvents']['shortTermOutlook']
+        st_state_description = short_term_outlook['stateDescription']
+        st_outlook_direction = short_term_outlook['direction']
+        st.write(f"Short term Outlook :- {st_state_description}....Direction is {st_outlook_direction}")
 
-    #data = yf.download(tickers = ticker, start= start_date , end=end_date)
-    data = get_historical_data(selected_ticker, start_date, end_date)
-    #data.columns = ['close', 'volume', 'open', 'high', 'low']
-    ohlc = data.sort_values(by=['Date'],ascending=True)
-    ta_df = pd.DataFrame()
-    ta_df['close'] = ohlc['close']
-    ta_df['SMA_9'] = round(TA.SMA(ohlc,9),2)
-    ta_df['SMA_20'] = round(TA.SMA(ohlc,20),2)
-    ta_df['SMA_50'] = round(TA.SMA(ohlc,50),2)
-    ta_df['SMA_100'] = round(TA.SMA(ohlc,100),2)
-    ta_df['MACD'] =  round(TA.MACD(ohlc),2)['MACD']
-    ta_df['SAR'] = round(TA.SAR(ohlc),2)
-    ta_df['BB_Upper'] = round(TA.MOBO(ohlc),2)['BB_UPPER']
-    #ta_df['BB_Middle'] = round(TA.MOBO(ohlc),2)['BB_MIDDLE']
-    ta_df['BB_Lower'] = round(TA.MOBO(ohlc),2)['BB_LOWER']
-    ta_df = ta_df.tail(5)
-    ta_df = ta_df.reset_index()
-    ta_df["Date"] = pd.to_datetime(ta_df["Date"])
-    ta_df["Date"] = ta_df["Date"].dt.strftime("%Y-%m-%d")
-    st.dataframe(ta_df, hide_index=True)
-    
+        #data = yf.download(tickers = ticker, start= start_date , end=end_date)
+        data = get_historical_data(selected_ticker, start_date, end_date)
+        #data.columns = ['close', 'volume', 'open', 'high', 'low']
+        ohlc = data.sort_values(by=['Date'],ascending=True)
+        ta_df = pd.DataFrame()
+        ta_df['close'] = ohlc['close']
+        ta_df['SMA_9'] = round(TA.SMA(ohlc,9),2)
+        ta_df['SMA_20'] = round(TA.SMA(ohlc,20),2)
+        ta_df['SMA_50'] = round(TA.SMA(ohlc,50),2)
+        ta_df['SMA_100'] = round(TA.SMA(ohlc,100),2)
+        ta_df['MACD'] =  round(TA.MACD(ohlc),2)['MACD']
+        ta_df['SAR'] = round(TA.SAR(ohlc),2)
+        ta_df['BB_Upper'] = round(TA.MOBO(ohlc),2)['BB_UPPER']
+        #ta_df['BB_Middle'] = round(TA.MOBO(ohlc),2)['BB_MIDDLE']
+        ta_df['BB_Lower'] = round(TA.MOBO(ohlc),2)['BB_LOWER']
+        ta_df = ta_df.tail(5)
+        ta_df = ta_df.reset_index()
+        ta_df["Date"] = pd.to_datetime(ta_df["Date"])
+        ta_df["Date"] = ta_df["Date"].dt.strftime("%Y-%m-%d")
+            
 ###### Next Plot the charts
-    # Create a Matplotlib figure object
+    ###-----------------------------------------------------------------------------------------------------###
+        df = data.copy()
+        #Get the 26-day EMA of the closing price
+        k = df['close'].ewm(span=12, adjust=False, min_periods=12).mean()
+
+        #Get the 12-day EMA of the closing price
+        d = df['close'].ewm(span=26, adjust=False, min_periods=26).mean()
+
+        #Subtract the 26-day EMA from the 12-Day EMA to get the MACD
+        macd = k - d
+
+        #Get the 9-Day EMA of the MACD for the Trigger line
+        macd_s = macd.ewm(span=9, adjust=False, min_periods=9).mean()
+
+        #Calculate the difference between the MACD - Trigger for the Convergence/Divergence value
+        macd_h = macd - macd_s
+        #Add all of our new values for the MACD to the dataframe
+        df['MACD_12_26_9'] = df.index.map(macd)
+        df['MACDh_12_26_9'] = df.index.map(macd_h)
+        df['MACDs_12_26_9'] = df.index.map(macd_s)
+        ###-----------------------------------------------------------------------------------------------------###
+        macd = df[['MACD_12_26_9']]
+        histogram = df[['MACDh_12_26_9']]
+        signal = df[['MACDs_12_26_9']]
+        ###-----------------------------------------------------------------------------------------------------###
+        macd_color = gen_macd_color(df)
+        ###-----------------------------------------------------------------------------------------------------###
+        apds = [
+            mpf.make_addplot(macd,color='#2962FF', panel=1),
+            mpf.make_addplot(signal,color='#FF6D00', panel=1),
+            mpf.make_addplot(histogram,type='bar',width=0.7,panel=1, color=macd_color,alpha=1,secondary_y=True),
+                ]
+        ###-----------------------------------------------------------------------------------------------------###
+        fig, ax = mpf.plot(
+                df,
+                title=f'{selected_ticker} MACD',
+                volume=False,
+                type='line', 
+                style=chart_style,
+                addplot=apds,
+                volume_panel=2,
+                figsize=(15,10),
+                tight_layout=True,
+                returnfig=True
+                )
+        st.pyplot(fig)
+        st.dataframe(ta_df, hide_index=True)
+    
+
+with col[2]:
+     # Create a Matplotlib figure object
+    title=f'20/50/100 SMA for {selected_ticker} '
+    st.caption(title)
     fig, ax = mpf.plot(data,
                        mav=(int(20),int(50),int(100)),
-                       title=f'{selected_ticker}-> SMA(20/50/100)',
-                       volume=True,
+                       title=title,
+                       volume=False,
                        style=chart_style,
                        type=chart_type,
-                       panel_ratios=(4,1),
+                       figsize=(15,10),
                        tight_layout=True,
                        returnfig=True
                        )
     
     st.pyplot(fig)
-    
-    
-
-
-with col[2]:
-     
-     st.markdown("TBD")
-     
-
-
+    st.dataframe(data)
 
 
     
