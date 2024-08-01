@@ -12,7 +12,7 @@ import plotly.graph_objs as go
 import datetime
 from matplotlib import pyplot as plt
 from plotly import graph_objects as go
-yf.pdr_override()
+#yf.pdr_override()
 
 #############################################
 #####API_KEY 
