@@ -401,7 +401,7 @@ with st.sidebar.form('inputs'):
      else:
          stock_df = load_data(['SPY', selected_ticker], start=start_date, end=end_date)['Close']
          fig = px.line(stock_df, x=stock_df.index, y=stock_df.columns,title = f"Closing Prices vs Benchmark", template= 'simple_white' )
-#fig.update_traces(line_color = 'purple')
+
      st.sidebar.plotly_chart(fig,use_container_width=True)
      # Fetch company information from asset profile
      if selected_ticker not in ['SPY', 'QQQ' ]:
