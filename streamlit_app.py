@@ -12,7 +12,7 @@ import plotly.graph_objs as go
 import datetime
 from matplotlib import pyplot as plt
 from plotly import graph_objects as go
-yf.pdr_override()
+#yf.pdr_override()
 
 #############################################
 #####API_KEY 
@@ -167,7 +167,8 @@ def yquery_technical_insights(symbol):
 @st.cache_data
 def get_historical_data(symbol, start_date, end_date):
 
-    df = pdr.get_data_yahoo(symbol, start=start_date, end=end_date)
+    #df = pdr.get_data_yahoo(symbol, start=start_date, end=end_date)
+    df = yf.download(symbol, interval= '1d')
     df = df.rename(columns = {'Open': 'open', 'High': 'high', 'Low': 'low', 'Close': 'close', 'Adj Close': 'adj close', 'Volume': 'volume'})
     for i in df.columns:
         df[i] = df[i].astype(float)
