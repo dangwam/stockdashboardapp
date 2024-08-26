@@ -831,9 +831,11 @@ with col[2]:
         st.subheader('Key Financial Data')
         fin_data = yq.Ticker(selected_ticker)
         # Specify the columns you want to include
-        selected_columns = ["numberOfAnalystOpinions",  "recommendationKey", "targetMedianPrice", "totalCash", "totalDebt","debtToEquity","returnOnEquity", "earningsGrowth"]
+        selected_columns = ["numberOfAnalystOpinions",  "recommendationKey", "targetMedianPrice", "totalCash", "totalDebt","debtToEquity","returnOnEquity"]
         rename_dict = {'numberOfAnalystOpinions': 'Analyst Ratings', 'recommendationKey': 'Opinion', 'targetMedianPrice': 'Median Target', 'totalCash': 'Cash Available', 'debtToEquity': 'D/E'}
         fin_df = pd.DataFrame.from_dict(fin_data.financial_data, orient = 'index')[selected_columns]
+        # Replace missing numbers with 0 and strings with N/A
+        fin_df = fin_df.applymap(lambda x: 0 if pd.isna(x) and isinstance(x, (int, float)) else ('N/A' if pd.isna(x) and isinstance(x, str) else x))
         fin_df.rename(columns=rename_dict, inplace=True)      
         df_transposed = fin_df.transpose()
         #df_transposed = df_transposed.apply(pd.to_numeric, errors='coerce')
