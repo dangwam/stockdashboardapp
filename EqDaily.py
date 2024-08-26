@@ -167,7 +167,8 @@ def yquery_technical_insights(symbol):
 @st.cache_data
 def get_historical_data(symbol, start_date, end_date):
 
-    df = pdr.get_data_yahoo(symbol, start=start_date, end=end_date)
+    #df = pdr.get_data_yahoo(symbol, start=start_date, end=end_date)
+    df = yf.download(symbol, interval= '1d')
     df = df.rename(columns = {'Open': 'open', 'High': 'high', 'Low': 'low', 'Close': 'close', 'Adj Close': 'adj close', 'Volume': 'volume'})
     for i in df.columns:
         df[i] = df[i].astype(float)
@@ -400,7 +401,7 @@ with st.sidebar.form('inputs'):
      else:
          stock_df = load_data(['SPY', selected_ticker], start=start_date, end=end_date)['Close']
          fig = px.line(stock_df, x=stock_df.index, y=stock_df.columns,title = f"Closing Prices vs Benchmark", template= 'simple_white' )
-#fig.update_traces(line_color = 'purple')
+
      st.sidebar.plotly_chart(fig,use_container_width=True)
      # Fetch company information from asset profile
      if selected_ticker not in ['SPY', 'QQQ' ]:
