@@ -521,14 +521,14 @@ with col[0]:
                             )
     
     data = data.reset_index().rename(columns={'level_1': 'Ticker'}).dropna().sort_values(by=['Date','Ticker'],ascending = False)
-    #st.dataframe(data.tail(2), hide_index=True)
+    #st.dataframe(data, hide_index=True)
     temp_df = pd.DataFrame()
     temp_df['Asset'] = data['Ticker']
     temp_df['1 Month'] = data['return_1m']
     temp_df['3 Months'] = data['return_3m']
     temp_df['6 Months'] = data['return_6m']
     temp_df['1 Year'] = data['return_12m']
-    temp_df = temp_df.tail(2)
+    temp_df = temp_df.head(2)
     st.dataframe(temp_df.style.format({'1 Month': '{:.4f}', '3 Months': '{:.4f}','6 Months': '{:.4f}', '1 Year': '{:.4f}'}).highlight_max(color='blue'),hide_index=True)
     
     security = get_stock_type(selected_ticker)
