@@ -165,9 +165,9 @@ with st.sidebar:
         #st.sidebar.caption('Volume:blue[BarChart]:stars:')
         #st.sidebar.bar_chart(stock_df['Volume'].tail(200),height=100)
 
-        print(f"selected_ticker is {selected_ticker}")
+        #print(f"selected_ticker is {selected_ticker}")
         #stock_df = load_data(selected_ticker, interval)
-        #print(stock_df.columns)
+        print(stock_df.columns)
         fig = px.line(stock_df, x=stock_df.index, y=stock_df.Close, template= 'simple_white')
         
         st.sidebar.plotly_chart(fig,use_container_width=True)
