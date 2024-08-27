@@ -166,7 +166,7 @@ with st.sidebar:
         #st.sidebar.bar_chart(stock_df['Volume'].tail(200),height=100)
 
         print(f"selected_ticker is {selected_ticker}")
-        stock_df = load_data(selected_ticker, interval)
+        #stock_df = load_data(selected_ticker, interval)
         #print(stock_df.columns)
         fig = px.line(stock_df, x=stock_df.index, y=stock_df.Close, template= 'simple_white')
         
