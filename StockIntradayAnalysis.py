@@ -181,7 +181,7 @@ with st.sidebar:
             'mike', 'nightclouds', 'sas', 'starsandstripes'
         ]
         
-    chart_style = st.selectbox('Chart style', options=chart_styles, index=chart_styles.index('starsandstripes'))
+    chart_style = st.selectbox('Chart style', options=chart_styles, index=chart_styles.index('nightclouds'))
         
     chart_types = [
             'candle', 'ohlc', 'line', 'renko', 'pnf'
