@@ -5,6 +5,7 @@ from finta import TA
 import datetime as dt
 import numpy as np
 import mplfinance as mpf
+from plotly import express as px
 ##
 
 ##
@@ -56,7 +57,7 @@ def find_trend(df):
 
     # Calculate quartiles
     quartiles = df['Close'].quantile([0.05, 0.10, 0.25, 0.5, 0.75, 1])
-    print(quartiles)
+    #print(quartiles)
 
     # Split the dataframe into quartile subsets
     q1 = df[df['Close'] <= quartiles[0.05]]
@@ -65,6 +66,8 @@ def find_trend(df):
     q4 = df[(df['Close'] > quartiles[0.25]) & (df['Close'] <= quartiles[0.5])]
     q5 = df[(df['Close'] > quartiles[0.5]) & (df['Close'] <= quartiles[0.75])]
     q6 = df[(df['Close'] > quartiles[0.75]) & (df['Close'] <= quartiles[1])]
+
+    #print(q1,q2,q3,q4,q5,q6)
 
     
     trend_q1 = analyze_trend(q1)
@@ -157,10 +160,22 @@ with st.sidebar:
        #st.sidebar.dataframe(stock_df[['Open','High','Low','Close']].tail(5),hide_index=False)
             #st.sidebar.caption('_Last_ :blue[5] Candles :stars:')
             #st.caption('A caption with _italics_ :blue[colors] and emojis :sunglasses:')
-        st.sidebar.caption('ClosingPrice:blue[LineChart]:stars:')
-        st.sidebar.line_chart(stock_df['Close'],height=100)
-        st.sidebar.caption('Volume:blue[BarChart]:stars:')
-        st.sidebar.bar_chart(stock_df['Volume'].tail(200),height=100)
+        st.sidebar.caption(f'{selected_ticker} ClosingPrice:blue[LineChart]:stars:')
+        #st.sidebar.line_chart(stock_df['Close'],height=500)
+        #st.sidebar.caption('Volume:blue[BarChart]:stars:')
+        #st.sidebar.bar_chart(stock_df['Volume'].tail(200),height=100)
+
+        print(f"selected_ticker is {selected_ticker}")
+        if selected_ticker == 'SPY':
+            stock_df = load_data(selected_ticker, interval)
+            print(stock_df.columns)
+            fig = px.line(stock_df, x=stock_df.index, y=stock_df.Close, template= 'simple_white')
+        
+        else:
+            stock_df = load_data(['SPY', selected_ticker], interval)['Close']
+            fig = px.line(stock_df, x=stock_df.index, y=stock_df.columns, template= 'simple_white' )
+
+        st.sidebar.plotly_chart(fig,use_container_width=True)
         
 
     chart_styles = [
@@ -175,9 +190,9 @@ with st.sidebar:
             'candle', 'ohlc', 'line', 'renko', 'pnf'
         ]
 
-col = st.columns((6, 1), gap='small')
+col = st.columns((10, 3), gap='small')
 with col[0]:
-    st.write("Column 0")
+    #st.write("Column 0")
     #st.dataframe(stock_df)
     if interval == '1d':
             ohlc = stock_df.sort_values(by=['Date'],ascending=True)
@@ -185,7 +200,9 @@ with col[0]:
             ohlc = stock_df.sort_values(by=['Datetime'],ascending=True)
             
     ta_df = pd.DataFrame()
+    ta_df['open'] = round(ohlc['Open'],2)
     ta_df['close'] = round(ohlc['Close'],2)
+    ta_df['volume'] = round(ohlc['Volume'],2)
     ta_df['BB_Upper'] = round(TA.MOBO(ohlc),2)['BB_UPPER']
     #ta_df['BB_Middle'] = round(TA.MOBO(ohlc),2)['BB_MIDDLE']
     ta_df['BB_Lower'] = round(TA.MOBO(ohlc),2)['BB_LOWER']
@@ -204,7 +221,7 @@ with col[0]:
     ta_df['AO'] = ta_df['SMA5'] - ta_df['SMA34']
     ##
     ta_df['RSI'] =  round(TA.RSI(ohlc),2)
-    ta_df['IFT_RSI'] =  round(TA.IFT_RSI(ohlc),2)
+    #ta_df['IFT_RSI'] =  round(TA.IFT_RSI(ohlc),2)
     ta_df['SAR'] = round(TA.SAR(ohlc),2)
     #SAR stands for “stop and reverse,” which is the actual indicator used in the system.
     #    SAR trails price as the trend extends over time. The indicator is below prices when prices are rising and above prices when prices are falling.
@@ -213,7 +230,7 @@ with col[0]:
     ta_df['ROC'] = round(TA.ROC(ohlc),2)
     ta_df['high'] = round(ohlc['High'],2)
     ta_df['low'] = round(ohlc['Low'],2)
-    ta_df.to_csv('./data/ta_df.csv')
+    #ta_df.to_csv('./data/ta_df.csv')
     ta_df = ta_df.sort_index(ascending=False)
     ta_df = ta_df.reset_index()
     st.dataframe(ta_df, hide_index=True)
@@ -221,7 +238,9 @@ with col[0]:
     ###################
     ###### Next Plot the charts
     ###--------MACD Chart---------------------------------------------------------------------------------------------###
-    df_macd = stock_df.tail(200).copy()
+    st.write('Note:- Default Chart Style is nightclouds- you may select your style from the sidebar by Scrolling Down !!')
+    st.write(f'{selected_ticker} - MACD <12_26_9> [Signal->Orange,MACD->Blue]')
+    df_macd = stock_df.tail(250).copy()
             #Get the 26-day EMA of the closing price
     k = df_macd['Close'].ewm(span=12, adjust=False, min_periods=12).mean()
             #Get the 12-day EMA of the closing price
@@ -244,176 +263,265 @@ with col[0]:
     macd_color = gen_macd_color(df_macd)
             ###-----------------------------------------------------------------------------------------------------###
     apds1 = [
-                mpf.make_addplot(macd,color='#2962FF', panel=1),
-                mpf.make_addplot(signal,color='#FF6D00', panel=1),
-                mpf.make_addplot(histogram,type='bar',width=0.7,panel=1, color=macd_color,alpha=1,secondary_y=True),
-                    ]
+            mpf.make_addplot(macd,color='#2962FF', width = 1.0, panel=1),
+            mpf.make_addplot(signal,color='#FF6D00', width = 2.0, panel=1),
+            mpf.make_addplot(histogram,type='bar',width=0.7,panel=1, color=macd_color,alpha=1,secondary_y=True),
+                ]
             ###-----------------------------------------------------------------------------------------------------###
     fig1, ax = mpf.plot(
-                    df_macd,
-                    title=f'{selected_ticker} MACD',
-                    volume=False,
-                    type='candle', 
-                    style=chart_style,
-                    addplot=apds1,
-                    volume_panel=2,
-                    figsize=(20,10),
-                    tight_layout=True,
-                    returnfig=True
-                    )
+                df_macd,
+                #title=f'{selected_ticker} MACD',
+                volume=False,
+                type='candle', 
+                style=chart_style,
+                addplot=apds1,
+                volume_panel=2,
+                panel_ratios=(2, 1.5),
+                figsize=(10,5),
+                tight_layout=True,
+                returnfig=True
+                )
     st.pyplot(fig1)
-        ###################
+    ###################
+
+    df_dc = stock_df.tail(200).copy()
+    st.write("DONCHAIN CHANNEL - Volatility Indicator to identify price trends & optimal entry & exit in ranging markets.")
+    period = 10
+    df_dc['Upper'] = df_dc['High'].rolling(period).max()
+    df_dc['Lower'] = df_dc['Low'].rolling(period).min()
+    df_dc['Middle'] = (df_dc['Upper'] + df_dc['Lower']) / 2
+
+    # Data Extracted And New Variable Applied
+    DCU = df_dc[['Upper']]
+    DCM = df_dc[['Middle']]
+    DCL = df_dc[['Lower']]
+
+    apds2 = [
+                            mpf.make_addplot(DCU,color='#2962FF',panel=0,),
+                            mpf.make_addplot(DCM,color='#FF6D00',panel=0,),
+                            mpf.make_addplot(DCL,color='#2962FF',panel=0,),
+                        ]
+                    
+    fig2, ax = mpf.plot(
+                            df_dc,
+                            volume=False,
+                            type="candle",
+                            fill_between=dict(y1=df_dc['Upper'].values,y2=df_dc['Lower'].values,alpha=0.1,color='#2962FF'),
+                            style=chart_style,
+                            addplot=apds2,
+                            figsize=(10,3),
+                            tight_layout=True,
+                            returnfig=True
+                            
+                        ) 
+
+    st.pyplot(fig2)
+
+    ###--------Multi SMA Chart---------------------------------------------------------------------------------------------###
+        #columns_to_copy = ['open', 'high', 'low', 'close', 'volume']
+        #rename_dict = {'close': 'Close', 'open': 'Open', 'high': 'High', 'low': 'Low', 'volume': 'Volume'}
+        #df_macd.index = pd.to_datetime(df_macd.index)  # Ensure index is datetime
+        #df_ma = df_macd[columns_to_copy]
+    st.write(f'{selected_ticker}- Multi Period SMA [ 9->Blue, 20->Green ,50->Red, 100-> Purple]')
+    df_ma = ta_df.head(170).copy()
+    df_ma = df_ma.sort_index(ascending=False)
+    if interval == '1d':
+            df_ma = df_ma.set_index('Date')
+           # df_ma.index = pd.to_datetime(df_ma.index)  # Ensure index is datetime
+    else:
+            df_ma = df_ma.set_index('Datetime')  # Ensure index is datetime
+    
+    #st.dataframe(df_ma)
+
+    #df_ma['SMA_200'] = df_ma['close'].rolling(window=200).mean()
+    #df_ma.rename(columns=rename_dict, inplace=True)
+    #df_ma = df_ma.dropna()
+    s9 = df_ma['SMA_9']
+    s20 = df_ma['SMA_20']
+    s50 = df_ma['SMA_50']
+    s100 = df_ma['SMA_100']
+    #s200 = df_ma['SMA_200']
+
+        # Generate the color lists for each SMA using the function
+        #sma_colors = gen_sma_colors(df_ma)
+
+        # Create addplot objects for each SMA with the corresponding color list
+    apds5 = [
+            mpf.make_addplot(df_ma['SMA_9'], color='#2053c7', width = 0.8, panel=0),
+            mpf.make_addplot(df_ma['SMA_20'], color='#235a56', width = 1.0, panel=0),
+            mpf.make_addplot(df_ma['SMA_50'], color='#c6213d', width = 1.4, panel=0),
+            mpf.make_addplot(df_ma['SMA_100'], color='#733bac', width = 1.8, panel=0)
+            #mpf.make_addplot(df_ma['SMA_200'], color='#9b924c', width = 0.8, panel=0)
+            #mpf.make_addplot(df_ma['SMA_500'], color=sma_colors['sma500'], panel=0)
+        ]
+        
+    fig5, ax = mpf.plot(
+                        df_ma,
+                        #title=f'{selected_ticker} Multi Period SMA with Color Coding',
+                        volume=True,
+                        type='candle', 
+                        style=chart_style,
+                        addplot=apds5,
+                        volume_panel=1,
+                        figsize=(10,4),
+                        tight_layout=True,
+                        panel_ratios=(10, 3),
+                        returnfig=True
+                        )
+    st.pyplot(fig5)
 
     ###-----------   Golden cross---------------------------------------------------------------------------###
             ### A golden cross is a chart pattern in which a relatively short-term moving average crosses above a long-term moving average ###
             ### 
-    st.write("A golden cross is a chart pattern in which a relatively short-term moving average crosses above a long-term moving average. Choose short and long periods to proceed")
-    st.write(selected_ticker)
+    st.subheader("SMA Cross Overs.Choose short/long periods to proceed [G -> BUY, R-> SELL]")
+    #st.write(selected_ticker)
     frames = ['<select>',9,21,50,100,200]
     default_long_period = frames.index(21)
     default_short_period = frames.index(9)
     maflag1 = ""
     df = stock_df.tail(200).copy()
-with st.form("select Periods",clear_on_submit=False, border= True):
-        short_period = st.selectbox("Select Short Period", frames, index = default_short_period )
-        long_period = st.selectbox("Select Long Period", frames, index = default_long_period)
-        if int(long_period) < int(short_period):
-                    st.write("You have not selected periods in the right oreder. Try again !")
-                    st.stop()
-                
-        if short_period == 9: maflag1 = "SMA9"
-        elif short_period == 21: maflag1 = "SMA21"
-        elif short_period == 50: maflag1 = "SMA50"
-        elif short_period == 100: maflag1 = "SMA100"
-        else : maflag1 = "SMA200"
+    with st.form("select Periods",clear_on_submit=False, border= True):
+            short_period = st.selectbox("Select Short Period", frames, index = default_short_period )
+            long_period = st.selectbox("Select Long Period", frames, index = default_long_period)
+            if int(long_period) < int(short_period):
+                        st.write("You have not selected periods in the right oreder. Try again !")
+                        st.stop()
+                    
+            if short_period == 9: maflag1 = "SMA9"
+            elif short_period == 21: maflag1 = "SMA21"
+            elif short_period == 50: maflag1 = "SMA50"
+            elif short_period == 100: maflag1 = "SMA100"
+            else : maflag1 = "SMA200"
 
-        maflag2=""
-        if long_period == 21: maflag2 = "SMA21"
-        elif long_period == 50: maflag2 = "SMA50"
-        elif long_period == 100: maflag2 = "SMA100"
-        else : maflag2 = "SMA200"
+            maflag2=""
+            if long_period == 21: maflag2 = "SMA21"
+            elif long_period == 50: maflag2 = "SMA50"
+            elif long_period == 100: maflag2 = "SMA100"
+            else : maflag2 = "SMA200"
 
-        print(long_period, short_period)
-                        
-        if (short_period == 9 and long_period == 21):
-                            df[maflag1] = df['Close'].rolling(window=9).mean()
-                            df[maflag2] = df['Close'].rolling(window=21).mean()
-        elif (short_period == 9 and long_period == 50):
-                            df[maflag1] = df['Close'].rolling(window=9).mean()
-                            df[maflag2] = df['Close'].rolling(window=50).mean()
-        elif (short_period == 9 and long_period == 100):
-                            df[maflag1] = df['Close'].rolling(window=9).mean()
-                            df[maflag2] = df['Close'].rolling(window=100).mean()
-        elif (short_period == 9 and long_period == 200):
-                            df[maflag1] = df['Close'].rolling(window=9).mean()
-                            df[maflag2] = df['Close'].rolling(window=200).mean()
-        elif (short_period == 21 and long_period == 50):
-                            df[maflag1] = df['Close'].rolling(window=21).mean()
-                            df[maflag2] = df['Close'].rolling(window=50).mean()
-        elif (short_period == 21 and long_period == 100):
-                            df[maflag1] = df['Close'].rolling(window=21).mean()
-                            df[maflag2] = df['Close'].rolling(window=100).mean()
-        elif (short_period == 21 and long_period == 200):
-                            df[maflag1] = df['Close'].rolling(window=21).mean()
-                            df[maflag2] = df['Close'].rolling(window=200).mean()        
-        elif (short_period == 50 and long_period == 100):
-                            df[maflag1] = df['Close'].rolling(window=50).mean()
-                            df[maflag2] = df['Close'].rolling(window=100).mean()
-        elif (short_period == 50 and long_period == 200):
-                            df[maflag1] = df['Close'].rolling(window=50).mean()
-                            df[maflag2] = df['Close'].rolling(window=200).mean()        
-        else:
-                            st.write("Invalid combinations of periods found ! Try Again")
-                            st.stop()   
+            print(long_period, short_period)
+                            
+            if (short_period == 9 and long_period == 21):
+                                df[maflag1] = df['Close'].rolling(window=9).mean()
+                                df[maflag2] = df['Close'].rolling(window=21).mean()
+            elif (short_period == 9 and long_period == 50):
+                                df[maflag1] = df['Close'].rolling(window=9).mean()
+                                df[maflag2] = df['Close'].rolling(window=50).mean()
+            elif (short_period == 9 and long_period == 100):
+                                df[maflag1] = df['Close'].rolling(window=9).mean()
+                                df[maflag2] = df['Close'].rolling(window=100).mean()
+            elif (short_period == 9 and long_period == 200):
+                                df[maflag1] = df['Close'].rolling(window=9).mean()
+                                df[maflag2] = df['Close'].rolling(window=200).mean()
+            elif (short_period == 21 and long_period == 50):
+                                df[maflag1] = df['Close'].rolling(window=21).mean()
+                                df[maflag2] = df['Close'].rolling(window=50).mean()
+            elif (short_period == 21 and long_period == 100):
+                                df[maflag1] = df['Close'].rolling(window=21).mean()
+                                df[maflag2] = df['Close'].rolling(window=100).mean()
+            elif (short_period == 21 and long_period == 200):
+                                df[maflag1] = df['Close'].rolling(window=21).mean()
+                                df[maflag2] = df['Close'].rolling(window=200).mean()        
+            elif (short_period == 50 and long_period == 100):
+                                df[maflag1] = df['Close'].rolling(window=50).mean()
+                                df[maflag2] = df['Close'].rolling(window=100).mean()
+            elif (short_period == 50 and long_period == 200):
+                                df[maflag1] = df['Close'].rolling(window=50).mean()
+                                df[maflag2] = df['Close'].rolling(window=200).mean()        
+            else:
+                                st.write("Invalid combinations of periods found ! Try Again")
+                                st.stop()   
 
-        golden_cal(df)
-                        #Fuction Color Applied And Df Generated 
-                        #Fuction Color Applied And Df Generated 
-        goldencrossover = color(df)
-                        # Data Extracted And New Variable Applied
-        up_sma100 = goldencrossover[['up']]
-        down_sma100 = goldencrossover[['down']]
-        up_sma21 = goldencrossover[[maflag1]]
-        dco = goldencrossover[['GoldenCrossOver']]
-        gco = goldencrossover[['DeathCrossOver']]
-                        #st.dataframe(df)
-        ic = [
-                                #Golden Crossover
-                                mpf.make_addplot(up_sma100,color = 'green',panel=0,),
-                                mpf.make_addplot(down_sma100,color = '#FF8849',panel=0,),
-                                mpf.make_addplot(up_sma21,color = '#0496ff',panel=0,linestyle='dashdot'),
-                                mpf.make_addplot(gco,type='scatter',markersize=200,marker='v',color='red',panel=0),
-                                mpf.make_addplot(dco,type='scatter',markersize=200,marker='^',color='green',panel=0),
-                            ]
-                        
-        fig3, ax = mpf.plot(
-                                df,
-                                volume=False,
-                                type="candle", 
-                                style= chart_style,
-                                addplot=ic,
-                                figsize=(25,15),
-                                tight_layout=True,
-                                returnfig=True
-                            )
-        
-        if st.form_submit_button('Submit'):
-                st.pyplot(fig3)
+            golden_cal(df)
+                            #Fuction Color Applied And Df Generated 
+                            #Fuction Color Applied And Df Generated 
+            goldencrossover = color(df)
+                            # Data Extracted And New Variable Applied
+            up_sma100 = goldencrossover[['up']]
+            down_sma100 = goldencrossover[['down']]
+            up_sma21 = goldencrossover[[maflag1]]
+            dco = goldencrossover[['GoldenCrossOver']]
+            gco = goldencrossover[['DeathCrossOver']]
+                            #st.dataframe(df)
+            ic = [
+                                    #Golden Crossover
+                                    mpf.make_addplot(up_sma100,color = 'green',panel=0,width=1.5),
+                                    mpf.make_addplot(down_sma100,color = 'red',panel=0,width=1.5),
+                                    mpf.make_addplot(up_sma21,color = 'blue',panel=0,linestyle='dashdot',width=1.2),
+                                    mpf.make_addplot(gco,type='scatter',markersize=100,marker='v',color='red',panel=0),
+                                    mpf.make_addplot(dco,type='scatter',markersize=100,marker='^',color='green',panel=0),
+                                ]
+                            
+            fig3, ax = mpf.plot(
+                                    df,
+                                    volume=False,
+                                    type="candle", 
+                                    style= chart_style,
+                                    addplot=ic,
+                                    figsize=(10,4),
+                                    tight_layout=True,
+                                    returnfig=True
+                                )
+            
+            if st.form_submit_button('Submit'):
+                    filtered_df = df[df['GoldenCrossOver'].notna() | df['DeathCrossOver'].notna()]
+                    st.dataframe(filtered_df)
+                    st.pyplot(fig3)
 
-df_dc = stock_df.tail(200).copy()
-st.write("DONCHAIN CHANNEL PLot:-Donchian Channel is a volatility indicator that helps technical analysts to identify and define price trends as well as determine the optimal entry and exit points in ranging markets.")
-period = 10
-df_dc['Upper'] = df_dc['High'].rolling(period).max()
-df_dc['Lower'] = df_dc['Low'].rolling(period).min()
-df_dc['Middle'] = (df_dc['Upper'] + df_dc['Lower']) / 2
-
-        # Data Extracted And New Variable Applied
-DCU = df_dc[['Upper']]
-DCM = df_dc[['Middle']]
-DCL = df_dc[['Lower']]
-
-apds2 = [
-                mpf.make_addplot(DCU,color='#2962FF',panel=0,),
-                mpf.make_addplot(DCM,color='#FF6D00',panel=0,),
-                mpf.make_addplot(DCL,color='#2962FF',panel=0,),
-            ]
-        
-fig2, ax = mpf.plot(
-                df_dc,
-                volume=False,
-                type="candle",
-                fill_between=dict(y1=df_dc['Upper'].values,y2=df_dc['Lower'].values,alpha=0.1,color='#2962FF'),
-                style=chart_style,
-                addplot=apds2,
-                figsize=(20,10),
-                tight_layout=True,
-                returnfig=True
-                
-            ) 
-
-st.pyplot(fig2)
+            
 
 
    
 with col[1]:
-     st.write('*****Data Inferences*****',)
-     temp_df = stock_df.copy()
+     #st.write('*****Data Inferences*****',)
+     temp_df = stock_df.tail(200).copy()
      trend_q1, trend_q2, trend_q3, trend_q4, trend_q5, trend_q6= find_trend(temp_df)
-     st.metric("5% quartile Trend is ", value=trend_q1, delta = trend_q1 )
-     st.metric("10% quartile Trend is ", value=trend_q2, delta = trend_q2 )
-     st.metric("25% quartile Trend is ", value=trend_q3, delta = trend_q3 )
-     st.metric("50% quartile Trend is ", value=trend_q4, delta = trend_q4 )
+     #st.metric("5% quartile Trend is ", value=trend_q1, delta = trend_q1 )
+     #st.metric("10% quartile Trend is ", value=trend_q2, delta = trend_q2 )
+     #st.metric("25% quartile Trend is ", value=trend_q3, delta = trend_q3 )
+     #st.metric("50% quartile Trend is ", value=trend_q4, delta = trend_q4 )
      st.metric("75% quartile Trend is ", value=trend_q5, delta = trend_q5 )
-     st.metric("100% quartile Trend is ", value=trend_q6, delta = trend_q6 )
-
+     #st.metric("100% quartile Trend is ", value=trend_q6, delta = trend_q6 )
+     st.subheader('Price-Volume EMA(21/50)')
 #st.dataframe(stock_df[['Open','High','Low','Close','Volume']].tail(5),hide_index=False)
-temp_df = stock_df.copy()
-temp_df = temp_df.drop(columns=['Adj Close', 'High', 'Low','Open'], axis=1)
-#temp_df = temp_df.rename(columns={'Volume':'Close'})
-temp_df['vol_9ema'] =  round((temp_df['Volume'].ewm(span=9, adjust=False, min_periods=9).mean() / 1000000), 2)
-temp_df['vol_21ema'] =  round((temp_df['Volume'].ewm(span=21, adjust=False, min_periods=21).mean() / 1000000), 2)
-temp_df['vol_50ema'] =  round((temp_df['Volume'].ewm(span=50, adjust=False, min_periods=21).mean() / 1000000), 2)
-st.dataframe(temp_df,hide_index=False)
+    #temp_df = stock_df.copy()
+     temp_df = temp_df.drop(columns=['Adj Close'], axis=1)
+     temp_df.index = pd.to_datetime(temp_df.index)  # Ensure index is datetime
+     #temp_df = temp_df.rename(columns={'Volume':'Close'})
+     #temp_df['9ema'] =  round((temp_df['Volume'].ewm(span=9, adjust=False, min_periods=9).mean() / 1000000), 2)
+     temp_df['21ema'] =  round((temp_df['Volume'].ewm(span=21, adjust=False, min_periods=21).mean() / 1000000), 2)
+     temp_df['50ema'] =  round((temp_df['Volume'].ewm(span=50, adjust=False, min_periods=50).mean() / 1000000), 2)
+     #temp_df['vol_100ema'] =  round((temp_df['Volume'].ewm(span=100, adjust=False, min_periods=100).mean() / 1000000), 2)
+     
+
+     #s21 = temp_df['vol_21ema']
+     #s50 = temp_df['vol_50ema']
+
+     apds5 = [
+             #mpf.make_addplot(temp_df['9ema'], color='red', width = 1.5, panel=0),
+             mpf.make_addplot(temp_df['21ema'], color='blue', width = 2.5, panel=0),
+             mpf.make_addplot(temp_df['50ema'], color='purple', width = 3.0, panel=0)
+             
+            ]
+     
+     fig5, ax = mpf.plot(
+                        temp_df,
+                        #title=f'{selected_ticker} Multi Period SMA with Color Coding',
+                        volume=False,
+                        type='candle', 
+                        style=chart_style,
+                        addplot=apds5,
+                        volume_panel=1,
+                        figsize=(20,12),
+                        tight_layout=True,
+                        #panel_ratios=(4, 1),
+                        returnfig=True
+                        )
+     st.pyplot(fig5)
+     temp_df = temp_df.tail(6).drop(columns=['Open','High','Low'])
+     st.write('Last 6 volume rows')
+     st.dataframe(temp_df,hide_index=True)
+       
 
 
         
