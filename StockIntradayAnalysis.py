@@ -166,15 +166,10 @@ with st.sidebar:
         #st.sidebar.bar_chart(stock_df['Volume'].tail(200),height=100)
 
         print(f"selected_ticker is {selected_ticker}")
-        if selected_ticker == 'SPY':
-            stock_df = load_data(selected_ticker, interval)
-            print(stock_df.columns)
-            fig = px.line(stock_df, x=stock_df.index, y=stock_df.Close, template= 'simple_white')
+        stock_df = load_data(selected_ticker, interval)
+        #print(stock_df.columns)
+        fig = px.line(stock_df, x=stock_df.index, y=stock_df.Close, template= 'simple_white')
         
-        else:
-            stock_df = load_data(['SPY', selected_ticker], interval)['Close']
-            fig = px.line(stock_df, x=stock_df.index, y=stock_df.columns, template= 'simple_white' )
-
         st.sidebar.plotly_chart(fig,use_container_width=True)
         
 
