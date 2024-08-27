@@ -1,11 +1,8 @@
 streamlit
 pandas
-pandas_datareader
-altair
+numpy
 plotly
 yfinance
-yahooquery
 datetime
 finta
-matplotlib
 mplfinance
