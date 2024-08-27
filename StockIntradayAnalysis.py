@@ -33,10 +33,12 @@ def load_data(ticker,interval):
 
      if interval == '1m':
         stock_df = yf.download(tickers = [ticker], interval= '1m')
-     elif interval in ['5m','15m']:
-        stock_df = yf.download(tickers = [ticker], period = '60d', interval= interval)
+     elif interval == '5m':
+        stock_df = yf.download(tickers = [ticker], period = '60d', interval= '5m')
+     elif interval == '15m':
+        stock_df = yf.download(tickers = [ticker], period = '60d', interval= '15m')
      elif interval == '1h':
-        stock_df = yf.download(tickers = [ticker], period = '700d', interval= interval)
+        stock_df = yf.download(tickers = [ticker], period = '700d', interval= '1h')
      else:
         stock_df = yf.download(tickers = [ticker], period = '10y', interval= '1d')
 
