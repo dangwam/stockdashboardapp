@@ -108,8 +108,8 @@ def get_sp500_components():
     df = pd.read_html("https://en.wikipedia.org/wiki/List_of_S%26P_500_companies")
     df = df[0]
     tickers = df["Symbol"].to_list()
-    extended_symbols = ['RIVN', 'AVGO', 'SPY', 'QQQ', 'TSLA', 'MA', 'PLTR', 'SOFI', 'PFE', 'WBA','BTC-USD','TLT', 'BJ']
-    extended_companies = ['Rivian Automotive', 'Broadcom Inc', 'SPDR S&P 500 ETF', 'Invesco QQQ Trust', 'Tesla', 'Mastercard', 'Palantir', 'Sofi', 'Pfizer', 'WallGreens','BITCOIN', 'TLT', 'BJ']
+    extended_symbols = ['RIVN', 'AVGO', 'SPY', 'QQQ', 'TSLA', 'MA', 'PLTR', 'SOFI', 'PFE', 'WBA','BJ', 'ALAB','ZOM','NMRA','IREN','DKNG','RKLB','APLT']
+    extended_companies = ['Rivian Automotive', 'Broadcom Inc', 'SPDR S&P 500 ETF', 'Invesco QQQ Trust', 'Tesla', 'Mastercard', 'Palantir', 'Sofi', 'Pfizer', 'WallGreens','BJ','AsteraLab-IPO','ZOmedica-P','Nemura-IPO','IREnergy-IPO','DraftKng-P','Rocketlab-P','APLT-P']
     # Combine tickers with extended symbols
     tickers.extend(extended_symbols)
     ##tickers_companies_dict = dict(zip(df["Symbol"], df["Security"]))
@@ -535,6 +535,7 @@ with col[0]:
     st.dataframe(temp_df.style.format({'1 Month': '{:.4f}', '3 Months': '{:.4f}','6 Months': '{:.4f}', '1 Year': '{:.4f}'}).highlight_max(color='blue'),hide_index=True)
     
     security = get_stock_type(selected_ticker)
+    print(f'security type is {security}')
     print(security)
     if security == 'EQUITY':
         forwardPE,priceToSalesTrailing12Months,enterpriseValue,profitMargins,dividend_yield = get_stock_info(selected_ticker,security)
@@ -606,7 +607,7 @@ with col[1]:
         ta_df = ta_df.reset_index()
         ta_df["Date"] = pd.to_datetime(ta_df["Date"])
         ta_df["Date"] = ta_df["Date"].dt.strftime("%Y-%m-%d")
-        st.dataframe(ta_df.tail(5), hide_index=True)
+        st.dataframe(ta_df.tail(8), hide_index=True)
         ###### Next Plot the charts
         ###--------MACD Chart---------------------------------------------------------------------------------------------###
         st.write('Note:- Default Chart Style is nightclouds- you may select your style from the sidebar by Scrolling Down !!')
@@ -693,6 +694,7 @@ with col[1]:
         #df_macd.index = pd.to_datetime(df_macd.index)  # Ensure index is datetime
         #df_ma = df_macd[columns_to_copy]
         st.write(f'{selected_ticker}- Multi Period SMA [ 9->Blue, 20->Green ,50->Red, 100-> Purple]')
+        st.dataframe(ta_df)
         df_ma = ta_df.tail(200).copy()
         df_ma = df_ma.set_index('Date')
         df_ma.index = pd.to_datetime(df_ma.index)  # Ensure index is datetime
@@ -701,6 +703,7 @@ with col[1]:
         df_ma['SMA_200'] = df_ma['close'].rolling(window=200).mean()
         #df_ma.rename(columns=rename_dict, inplace=True)
         #df_ma = df_ma.dropna()
+        #df_ma = df_ma.fillna(method='ffill')
         s9 = df_ma['SMA_9']
         s20 = df_ma['SMA_20']
         s50 = df_ma['SMA_50']
@@ -711,29 +714,32 @@ with col[1]:
         #sma_colors = gen_sma_colors(df_ma)
 
         # Create addplot objects for each SMA with the corresponding color list
-        apds5 = [
+        apds3 = [
             mpf.make_addplot(df_ma['SMA_9'], color='#2053c7', width = 2.0, panel=0),
             mpf.make_addplot(df_ma['SMA_20'], color='#235a56', width = 2.5, panel=0),
             mpf.make_addplot(df_ma['SMA_50'], color='#c6213d', width = 3.0, panel=0),
-            mpf.make_addplot(df_ma['SMA_100'], color='#733bac', width = 4.0, panel=0),
-            mpf.make_addplot(df_ma['SMA_200'], color='#9b924c', width = 0.8, panel=0)
+            mpf.make_addplot(df_ma['SMA_100'], color='#733bac', width = 4.0, panel=0)
+            #mpf.make_addplot(df_ma['SMA_200'], color='#9b924c', width = 0.8, panel=0)
             #mpf.make_addplot(df_ma['SMA_500'], color=sma_colors['sma500'], panel=0)
         ]
-        
-        fig5, ax = mpf.plot(
-                        df_ma,
-                        #title=f'{selected_ticker} Multi Period SMA with Color Coding',
-                        volume=True,
-                        type='candle', 
-                        style=chart_style,
-                        addplot=apds5,
-                        volume_panel=1,
-                        figsize=(20,12),
-                        tight_layout=True,
-                        panel_ratios=(4, 1),
-                        returnfig=True
-                        )
-        st.pyplot(fig5)
+        st.dataframe(df_ma.head(3))
+        if df_ma.empty:
+            st.write("No data available to plot for the selected Dates !")
+        else:
+            fig3, ax = mpf.plot(
+                            df_ma,
+                            #title=f'{selected_ticker} Multi Period SMA with Color Coding',
+                            volume=True,
+                            type='candle', 
+                            style=chart_style,
+                            addplot=apds3,
+                            volume_panel=1,
+                            figsize=(20,12),
+                            tight_layout=True,
+                            panel_ratios=(4, 1),
+                            returnfig=True
+                            )
+            st.pyplot(fig3)
 
         ###-----------   Golden cross---------------------------------------------------------------------------###
         ### A golden cross is a chart pattern in which a relatively short-term moving average crosses above a long-term moving average ###
@@ -806,7 +812,8 @@ with col[1]:
                 dco = goldencrossover[['GoldenCrossOver']]
                 gco = goldencrossover[['DeathCrossOver']]
                 #st.dataframe(df)
-                ic = [
+                
+                apds4 = [
                         #Golden Crossover
                         mpf.make_addplot(up_sma100,color = 'green',width = 3.0, panel=0,),
                         mpf.make_addplot(down_sma100,color = '#FF8849',width = 3.0, panel=0,),
@@ -815,17 +822,17 @@ with col[1]:
                         mpf.make_addplot(dco,type='scatter',markersize=200,marker='^',color='green',panel=0),
                     ]
                 
-                fig3, ax = mpf.plot(
+                fig4, ax = mpf.plot(
                         df,
                         volume=True,
                         type="candle", 
                         style= chart_style,
-                        addplot=ic,
+                        addplot=apds4,
                         figsize=(25,15),
                         tight_layout=True,
                         returnfig=True
                     )
-                st.pyplot(fig3)
+                st.pyplot(fig4)
 
                 
                 
@@ -835,21 +842,23 @@ with col[2]:
         if security == 'EQUITY':
             fin_data = yq.Ticker(selected_ticker)
             # Specify the columns you want to include
-            selected_columns = ["numberOfAnalystOpinions",  "recommendationKey", "targetMedianPrice", "totalCash", "totalDebt"]
-            rename_dict = {'numberOfAnalystOpinions': 'Analyst Ratings', 'recommendationKey': 'Opinion', 'targetMedianPrice': 'Median Target', 'totalCash': 'Cash Available'}
-            fin_df = pd.DataFrame.from_dict(fin_data.financial_data, orient = 'index')[selected_columns]
-            
+            #["numberOfAnalystOpinions",  "recommendationKey", "targetMedianPrice", "totalCash", "totalDebt"]
+            selected_columns = ["currentPrice","targetHighPrice","targetLowPrice","targetMeanPrice","Median Target","recommendationMean","Opinion","Analyst Ratings","Cash Available","totalCashPerShare","ebitda","totalDebt","quickRatio","currentRatio","totalRevenue","debtToEquity","revenuePerShare","returnOnAssets","returnOnEquity","freeCashflow","operatingCashflow","earningsGrowth","revenueGrowth","grossMargins","ebitdaMargins","operatingMargins","profitMargins"] #,"financialCurrency"]
+            fin_df = pd.DataFrame.from_dict(fin_data.financial_data, orient = 'index')
+            columns_to_drop = ["maxAge", "targetHighPrice", "targetLowPrice", "targetMeanPrice", "recommendationMean", "financialCurrency"]
+            fin_df = fin_df.drop(columns=[col for col in columns_to_drop if col in fin_df.columns])
             # Replace missing numbers with 0 and strings with N/A
-            fin_df = fin_df.applymap(lambda x: 0 if pd.isna(x) and isinstance(x, (int, float)) else ('N/A' if pd.isna(x) and isinstance(x, str) else x))
-            fin_df.rename(columns=rename_dict, inplace=True)   
-            
-            df_transposed = fin_df.transpose()
+            fin_df = fin_df.map(lambda x: 0 if pd.isna(x) and isinstance(x, (int, float)) else ('N/A' if pd.isna(x) and isinstance(x, str) else x))
+            #st.dataframe(fin_df) 
+            rename_dict = {'numberOfAnalystOpinions': 'Analyst Ratings', 'recommendationKey': 'Opinion', 'targetMedianPrice': 'Median Target', 'totalCash': 'Cash Available', 'debtToEquity': 'Total Debt/Equity %'}
+            fin_df.rename(columns=rename_dict, inplace=True)  
+            fin_df = fin_df.transpose()
             #df_transposed = df_transposed.apply(pd.to_numeric, errors='coerce')
             # Use the Pandas style to enhance the DataFrame appearance
-            styled_df = df_transposed.style.set_table_styles(
+            styled_df = fin_df.style.set_table_styles(
                 [{
                     'selector': 'th',
-                    'props': [('font-size', '15px'),
+                    'props': [('font-size', '12px'),
                             ('text-align', 'center'),
                             ('background-color', '#e6ffe6'),
                             ('color', '#333333'),
@@ -861,7 +870,7 @@ with col[2]:
                 'border': '1px solid black',    # Border for cells
                 'text-align': 'center',         # Center text alignment
                 'color': 'blue',               # Font color
-                'font-size': '15px' ,          # Font size for cell content
+                'font-size': '12px' ,          # Font size for cell content
                 'font-weight': 'bold'
             })  ##.highlight_max(color='yellow')  # Highlight maximum value with yellow color
             
