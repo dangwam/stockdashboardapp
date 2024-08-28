@@ -141,7 +141,7 @@ def get_company_info(ticker):
 def get_industry_data(stocks, start_date, end_date):
     #formatted_end_date = datetime.strptime(end_date, "%Y-%m-%d").strftime("%Y%m%d")
     #stocks = ['XLK', 'XLB', 'XLI', 'XLE', 'XLV', 'XLY', 'XLF', 'XLU', 'XLP']
-    data = yf.download(stocks, start=start_date, end=end_date).dropna()
+    data = yf.download(stocks, start=start_date).dropna()
     data_close = round(data['Adj Close'], 2)
     df_relative = round(data_close / data_close.iloc[0] * 100, 1)
             
