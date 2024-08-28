@@ -957,8 +957,8 @@ with col[2]:
         index_df.index = index_df.index.strftime('%Y-%m-%d')
         index_df = index_df.sort_index().tail(6)
         #print(relative_df.info())
-        st.write('Relative Price Movement of Index ETFs starting from the Start Date in the sidebar ! Displaying latest 6 entries.')
-        st.dataframe(index_df)
+        st.write('Index ETFs- ALL Data')
+        st.dataframe(index_cp)
 
         #### Relative Price Data for Industry ETF's 
         industry_etfs = ['XLK', 'XLB', 'XLI', 'XLE', 'XLV', 'XLY', 'XLF', 'XLU', 'XLP']
