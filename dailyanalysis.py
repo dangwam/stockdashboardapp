@@ -694,7 +694,7 @@ with col[1]:
         #df_macd.index = pd.to_datetime(df_macd.index)  # Ensure index is datetime
         #df_ma = df_macd[columns_to_copy]
         st.write(f'{selected_ticker}- Multi Period SMA [ 9->Blue, 20->Green ,50->Red, 100-> Purple]')
-        st.dataframe(ta_df)
+        #st.dataframe(ta_df)
         df_ma = ta_df.tail(200).copy()
         df_ma = df_ma.set_index('Date')
         df_ma.index = pd.to_datetime(df_ma.index)  # Ensure index is datetime
@@ -722,7 +722,7 @@ with col[1]:
             #mpf.make_addplot(df_ma['SMA_200'], color='#9b924c', width = 0.8, panel=0)
             #mpf.make_addplot(df_ma['SMA_500'], color=sma_colors['sma500'], panel=0)
         ]
-        st.dataframe(df_ma.head(3))
+        #st.dataframe(df_ma.head(3))
         if df_ma.empty:
             st.write("No data available to plot for the selected Dates !")
         else:
