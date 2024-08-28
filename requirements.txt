@@ -6,3 +6,4 @@ yfinance
 datetime
 finta
 mplfinance
+yahooquery
