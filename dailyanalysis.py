@@ -412,66 +412,69 @@ def golden_cal(df):
 #st.sidebar.subheader('Settings')
 #st.sidebar.caption(":chart_with_upwards_trend: Stock Analysis")
 
-with st.sidebar.form('inputs'):
-     available_tickers, tickers_companies_dict = get_sp500_components()
-     selected_ticker = st.sidebar.selectbox("Select Ticker", available_tickers, format_func=tickers_companies_dict.get)
-     start_date = st.sidebar.date_input("Start date", datetime.date(2010, 1, 1))
-     end_date = st.sidebar.date_input("End date", datetime.date.today())
-     df = load_data(selected_ticker, start_date, end_date)['Close'].reset_index()
-     # Find the maximum date in the DataFrame
-     df['Date'] = pd.to_datetime(df['Date'])
-     max_date = pd.to_datetime(df['Date'].max())
-     one_year_ago = max_date - pd.DateOffset(years=1)
-     last_year_data = df[df['Date'] >= one_year_ago]
-     x = round(last_year_data['Close'].describe(), 2)
-     temp_str=""
-     temp_index=""
-     out_str=""
-     # Iterate over the Series using items()
-     for index, value in x.items():
-        if index not in ['count']:
-            temp_index = index + " is "
-            temp_str = temp_index + str(value)
+with st.sidebar:
+    with st.sidebar.form("Submit",clear_on_submit=False, border= True):
+        available_tickers, tickers_companies_dict = get_sp500_components()
+        selected_ticker = st.selectbox("Select Ticker", available_tickers, format_func=tickers_companies_dict.get)
+        start_date = st.date_input("Start date", datetime.date(2010, 1, 1))
+        end_date = st.date_input("End date", datetime.date.today())
+        df = load_data(selected_ticker, start_date, end_date)['Close'].reset_index()
+        # Find the maximum date in the DataFrame
+        df['Date'] = pd.to_datetime(df['Date'])
+        max_date = pd.to_datetime(df['Date'].max())
+        one_year_ago = max_date - pd.DateOffset(years=1)
+        last_year_data = df[df['Date'] >= one_year_ago]
+        x = round(last_year_data['Close'].describe(), 2)
+        temp_str=""
+        temp_index=""
+        out_str=""
+        # Iterate over the Series using items()
+        for index, value in x.items():
+            if index not in ['count']:
+                temp_index = index + " is "
+                temp_str = temp_index + str(value)
 
-        out_str = out_str + " --- " + temp_str
-      
-     expander_title = f"{selected_ticker} Stats."
-     with st.sidebar.expander(expander_title):
+            out_str = out_str + " --- " + temp_str
+        
+        submitted_form = st.form_submit_button("Submit")
+
+    expander_title = f"{selected_ticker} Stats."
+    with st.sidebar.expander(expander_title):
             #st.write(out_str)
             #st.markdown(hide, unsafe_allow_html=True)
             st.markdown(out_str, unsafe_allow_html=True)
 
      
-     if start_date > end_date:
+    if start_date > end_date:
         st.sidebar.error("The end date must fall after the start date")
 
      #stock_df = yf.download(['SPY', selected_ticker], period='1d', start=start_date, end=end_date)['Close']
-     print(f"selected_ticker is {selected_ticker}")
-     if selected_ticker == 'SPY':
+    print(f"selected_ticker is {selected_ticker}")
+    if selected_ticker == 'SPY':
          stock_df = load_data(['SPY'], start=start_date, end=end_date)
          print(stock_df.columns)
          fig = px.line(stock_df, x=stock_df.index, y=stock_df.Close, title = f"Closing Prices vs Benchmark", template= 'simple_white')
      
-     else:
+    else:
          stock_df = load_data(['SPY', selected_ticker], start=start_date, end=end_date)['Close']
          fig = px.line(stock_df, x=stock_df.index, y=stock_df.columns,title = f"Closing Prices vs Benchmark", template= 'simple_white' )
 
-     st.sidebar.plotly_chart(fig,use_container_width=True)
+    st.sidebar.plotly_chart(fig,use_container_width=True)
      # Fetch company information from asset profile
-     if selected_ticker not in ['SPY', 'QQQ' ]:
+    if selected_ticker not in ['SPY', 'QQQ' ]:
          longBusinessSummary,fund_ownership = get_company_info(selected_ticker)
          st.sidebar.write("Key Information")
-     else:
+    else:
          longBusinessSummary = "Selecteed ASSET is an ETF and does not have a summary information at this time"
 
-     expander_title = f"Business Summary"
-     with st.sidebar.expander(expander_title):
+    expander_title = f"Business Summary"
+    with st.sidebar.expander(expander_title):
          st.write(longBusinessSummary)
          st.markdown(hide, unsafe_allow_html=True)
 
 
-     expander_title = f"FundOwnership"
-     with st.sidebar.expander(expander_title):
+    expander_title = f"FundOwnership"
+    with st.sidebar.expander(expander_title):
         if selected_ticker not in ['SPY', 'QQQ']:
             fund_ownership.reset_index(inplace=True)
             fund_ownership.drop(fund_ownership.columns[[0, 1]], axis=1, inplace=True)
@@ -481,7 +484,7 @@ with st.sidebar.form('inputs'):
             st.write(longBusinessSummary)
             st.markdown(hide, unsafe_allow_html=True)
 
-     with st.sidebar:
+    with st.sidebar:
         chart_styles = [
             'default', 'binance', 'blueskies', 'brasil', 
             'charles', 'checkers', 'classic', 'yahoo',
@@ -495,7 +498,7 @@ with st.sidebar.form('inputs'):
         ]
         #chart_type = st.selectbox('Chart type', options=chart_types, index=chart_types.index('candle'))
 
-     st.form_submit_button('Refresh')
+     #st.form_submit_button('Refresh')
 
 #######################
 # Dashboard Main Panel
@@ -832,8 +835,8 @@ with col[2]:
         if security == 'EQUITY':
             fin_data = yq.Ticker(selected_ticker)
             # Specify the columns you want to include
-            selected_columns = ["numberOfAnalystOpinions",  "recommendationKey", "targetMedianPrice", "totalCash", "totalDebt","debtToEquity","returnOnEquity"]
-            rename_dict = {'numberOfAnalystOpinions': 'Analyst Ratings', 'recommendationKey': 'Opinion', 'targetMedianPrice': 'Median Target', 'totalCash': 'Cash Available', 'debtToEquity': 'D/E'}
+            selected_columns = ["numberOfAnalystOpinions",  "recommendationKey", "targetMedianPrice", "totalCash", "totalDebt"]
+            rename_dict = {'numberOfAnalystOpinions': 'Analyst Ratings', 'recommendationKey': 'Opinion', 'targetMedianPrice': 'Median Target', 'totalCash': 'Cash Available'}
             fin_df = pd.DataFrame.from_dict(fin_data.financial_data, orient = 'index')[selected_columns]
             
             # Replace missing numbers with 0 and strings with N/A

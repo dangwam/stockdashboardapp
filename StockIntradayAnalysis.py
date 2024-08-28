@@ -33,16 +33,27 @@ def load_data(ticker,interval):
 
      if interval == '1m':
         stock_df = yf.download(tickers = [ticker], interval= '1m')
-     elif interval == '5m':
-        stock_df = yf.download(tickers = [ticker], interval= '5m')
-     elif interval == '15m':
-        stock_df = yf.download(tickers = [ticker], interval= '15m')
-     elif interval == '1h':
-        stock_df = yf.download(tickers = [ticker], interval= '1h')
-     else:
-        stock_df = yf.download(tickers = [ticker], period = '10y', interval= '1d')
+     if interval == '5m':
+        stock_df = yf.download(tickers = [ticker], period = '60d', interval= '5m')
+     if interval == '15m':
+        stock_df = yf.download(tickers = [ticker], period = '60d', interval= '15m')
+     if interval == '1h':
+        stock_df = yf.download(tickers = [ticker], period = '500d',interval= '1h')
+     if interval == '1d':
+        stock_df = yf.download(tickers = ticker, period = '10y', interval= '1d')
+
 
      return stock_df
+
+@st.cache_data
+def get_industry_data(stocks, period):
+    #formatted_end_date = datetime.strptime(end_date, "%Y-%m-%d").strftime("%Y%m%d")
+    #stocks = ['XLK', 'XLB', 'XLI', 'XLE', 'XLV', 'XLY', 'XLF', 'XLU', 'XLP']
+    data = yf.download(stocks, period = period, interval = '1d').dropna()
+    data_close = round(data['Adj Close'], 2)
+    df_relative = round(data_close / data_close.iloc[0] * 100, 1)
+            
+    return df_relative, data_close
 
 # Analyze the trend for each quartile subset
 def analyze_trend(subset):
@@ -151,28 +162,30 @@ def golden_cal(df):
 
 with st.sidebar:
     stock_df = pd.DataFrame()
-    with st.sidebar.form("select_ticker",clear_on_submit=False, border= True):
-        submitted_form = st.form_submit_button("Submit",)
+    with st.sidebar.form("Submit",clear_on_submit=False, border= True):
         default_val = "********************"
         available_tickers, tickers_companies_dict = get_sp500_components()
         selected_ticker = st.selectbox("Select Ticker", available_tickers, format_func=tickers_companies_dict.get,placeholder='Choose a value')
         interval = st.selectbox("Select Data Interval", ['1m', '5m', '15m', '1h', '1d'] )
+        print(interval)
         #if submitted_form:
         stock_df = load_data(selected_ticker, interval)
        #st.sidebar.dataframe(stock_df[['Open','High','Low','Close']].tail(5),hide_index=False)
             #st.sidebar.caption('_Last_ :blue[5] Candles :stars:')
             #st.caption('A caption with _italics_ :blue[colors] and emojis :sunglasses:')
-        st.sidebar.caption(f'{selected_ticker} ClosingPrice:blue[LineChart]:stars:')
+        
         #st.sidebar.line_chart(stock_df['Close'],height=500)
         #st.sidebar.caption('Volume:blue[BarChart]:stars:')
         #st.sidebar.bar_chart(stock_df['Volume'].tail(200),height=100)
 
         #print(f"selected_ticker is {selected_ticker}")
         #stock_df = load_data(selected_ticker, interval)
-        print(stock_df.columns)
-        fig = px.line(stock_df, x=stock_df.index, y=stock_df.Close, template= 'simple_white')
-        
-        st.sidebar.plotly_chart(fig,use_container_width=True)
+        #print(stock_df.columns)
+        submitted_form = st.form_submit_button("Submit")
+
+    st.sidebar.caption(f'{selected_ticker} ClosingPrice:blue[LineChart]:stars:')
+    fig = px.line(stock_df, x=stock_df.index, y=stock_df.Close, template= 'simple_white')
+    st.sidebar.plotly_chart(fig,use_container_width=True)
         
 
     chart_styles = [
@@ -518,8 +531,39 @@ with col[1]:
      temp_df = temp_df.tail(6).drop(columns=['Open','High','Low'])
      st.write('Last 6 volume rows')
      st.dataframe(temp_df,hide_index=True)
-       
 
+     #### Relative Price Data for Industry ETF's 
+     industry_etfs = ['XLK', 'XLB', 'XLI', 'XLE', 'XLV', 'XLY', 'XLF', 'XLU', 'XLP']
+     relative_df, industry_cp = get_industry_data(industry_etfs, '5y')
+    # Suppress the time part and display just the date portion
+     relative_df.index = relative_df.index.strftime('%Y-%m-%d')
+     relative_df = relative_df.sort_index().tail(6)
+        #print(relative_df.info())
+     st.write('Relative Price Movement of Industry ETFs ! Displaying latest 6 entries.')
+     st.dataframe(relative_df)
 
-        
-    
+     #### Relative Price Data for Crypto
+     crypto_list = ['BTC-USD', 'MSTR', 'BITX', 'BITO', 'ARKB', 'MARA', 'YBTC']
+     crypto_df, crypto_cp = get_industry_data(crypto_list, '3y')  
+     crypto_cp['BTC_BITO'] = round(((crypto_cp['BTC-USD']) / 1000) / crypto_cp['BITO'], 2)
+        # Suppress the time part and display just the date portion
+     crypto_df.index = crypto_df.index.strftime('%Y-%m-%d')
+     crypto_df = crypto_df.sort_index().tail(6)
+        #print(relative_df.info())
+     st.write('Relative Price Movement of Crypto Tickers ! Displaying latest 6 entries.')
+     st.dataframe(crypto_df)
+     
+     crypto_cp.index = crypto_cp.index.strftime('%Y-%m-%d')
+     crypto_cp = crypto_cp.sort_index()
+     st.write('Crypto Prices')
+     st.dataframe(crypto_cp.tail(6))
+
+     with st.expander('About', expanded=True):
+            st.write('''
+                - Data: [yfinance](https://finance.yahoo.com/)
+                - :orange[**Summary**]: Intarday analysis data & tools
+                - :orange[**Developer**]: mayank.dangwal2019@gmail.com
+                - :orange[**Future**]: Machine learning specific features
+                - :blue[**Version**]: [git](https://github.com/dangwam/stockdashboardapp.git)
+                    
+                ''')
