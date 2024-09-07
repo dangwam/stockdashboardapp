@@ -697,7 +697,7 @@ with col[1]:
         #df_ma = df_macd[columns_to_copy]
         st.write(f'{selected_ticker}- Multi Period SMA [ 9->Blue, 20->Green ,50->Red, 100-> Purple]')
         #st.dataframe(ta_df)
-        df_ma = ta_df.copy()
+        df_ma = ta_df.tail(250).copy()
         df_ma = df_ma.set_index('Date')
         df_ma.index = pd.to_datetime(df_ma.index)  # Ensure index is datetime
         #st.dataframe(df_ma)
