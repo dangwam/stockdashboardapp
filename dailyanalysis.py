@@ -720,8 +720,8 @@ with col[1]:
             mpf.make_addplot(df_ma['SMA_9'], color='#2053c7', width = 2.0, panel=0),
             mpf.make_addplot(df_ma['SMA_20'], color='#235a56', width = 2.5, panel=0),
             mpf.make_addplot(df_ma['SMA_50'], color='#c6213d', width = 3.0, panel=0),
-            mpf.make_addplot(df_ma['SMA_100'], color='#733bac', width = 4.0, panel=0),
-            mpf.make_addplot(df_ma['SMA_200'], color='#9b924c', width = 0.8, panel=0)
+            mpf.make_addplot(df_ma['SMA_100'], color='#733bac', width = 4.0, panel=0)
+            #mpf.make_addplot(df_ma['SMA_200'], color='#9b924c', width = 0.8, panel=0)
             #mpf.make_addplot(df_ma['SMA_500'], color=sma_colors['sma500'], panel=0)
         ]
         #st.dataframe(df_ma.head(3))
