@@ -702,7 +702,7 @@ with col[1]:
         df_ma.index = pd.to_datetime(df_ma.index)  # Ensure index is datetime
         #st.dataframe(df_ma)
         #df_ma['SMA_9'] = df_ma['close'].rolling(window=9).mean()
-        df_ma['SMA_200'] = df_ma['close'].rolling(window=200).mean()
+        #df_ma['SMA_200'] = df_ma['close'].rolling(window=200).mean()
         #df_ma.rename(columns=rename_dict, inplace=True)
         #df_ma = df_ma.dropna()
         #df_ma = df_ma.fillna(method='ffill')
@@ -710,7 +710,7 @@ with col[1]:
         s20 = df_ma['SMA_20']
         s50 = df_ma['SMA_50']
         s100 = df_ma['SMA_100']
-        s200 = df_ma['SMA_200']
+        #s200 = df_ma['SMA_200']
 
         # Generate the color lists for each SMA using the function
         #sma_colors = gen_sma_colors(df_ma)
@@ -747,7 +747,7 @@ with col[1]:
         ### A golden cross is a chart pattern in which a relatively short-term moving average crosses above a long-term moving average ###
         ### 
         st.write("A golden cross is a chart pattern in which a relatively short-term moving average crosses above a long-term moving average. Choose short and long periods to proceed")
-        frames = [9,21,50,100,200]
+        frames = [9,21,50,100]
         maflag1 = ""
         df = data.tail(200).copy()
         with st.form("aform"):
@@ -771,8 +771,8 @@ with col[1]:
                 elif long_period == 100: maflag2 = "SMA100"
                 else : maflag2 = "SMA200"
 
-                print(long_period, short_period)
-                
+                #print(long_period, short_period)
+                st.dataframe(df)
                 if (short_period == 9 and long_period == 21):
                     df[maflag1] = df['close'].rolling(window=9).mean()
                     df[maflag2] = df['close'].rolling(window=21).mean()
