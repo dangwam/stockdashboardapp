@@ -414,9 +414,11 @@ def golden_cal(df):
 
 with st.sidebar:
     with st.sidebar.form("Submit",clear_on_submit=False, border= True):
+        # Get the current date
+        today = datetime.date.today()
         available_tickers, tickers_companies_dict = get_sp500_components()
         selected_ticker = st.selectbox("Select Ticker", available_tickers, format_func=tickers_companies_dict.get)
-        start_date = st.date_input("Start date", datetime.date(2010, 1, 1))
+        start_date = st.date_input("Start date", value=datetime.date(2010, 1, 1), min_value=datetime.date(2010, 1, 1), max_value=today)
         end_date = st.date_input("End date", datetime.date.today())
         df = load_data(selected_ticker, start_date, end_date)['Close'].reset_index()
         # Find the maximum date in the DataFrame
