@@ -749,7 +749,7 @@ with col[1]:
         st.write("A golden cross is a chart pattern in which a relatively short-term moving average crosses above a long-term moving average. Choose short and long periods to proceed")
         frames = [9,21,50,100]
         maflag1 = ""
-        df = data.tail(200).copy()
+        df = data.copy()
         with st.form("aform"):
             short_period = st.selectbox("Select Short Period", frames)
             long_period = st.selectbox("Select Long Period", frames)
