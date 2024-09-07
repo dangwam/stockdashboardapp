@@ -747,7 +747,7 @@ with col[1]:
         ### A golden cross is a chart pattern in which a relatively short-term moving average crosses above a long-term moving average ###
         ### 
         st.write("A golden cross is a chart pattern in which a relatively short-term moving average crosses above a long-term moving average. Choose short and long periods to proceed")
-        frames = [9,21,50,100]
+        frames = [9,21,50,100,200]
         maflag1 = ""
         df = data.copy()
         with st.form("aform"):
