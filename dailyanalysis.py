@@ -609,7 +609,7 @@ with col[1]:
         ta_df = ta_df.reset_index()
         ta_df["Date"] = pd.to_datetime(ta_df["Date"])
         ta_df["Date"] = ta_df["Date"].dt.strftime("%Y-%m-%d")
-        st.dataframe(ta_df.tail(8), hide_index=True)
+        st.dataframe(ta_df.tail(100), hide_index=True)
         ###### Next Plot the charts
         ###--------MACD Chart---------------------------------------------------------------------------------------------###
         st.write('Note:- Default Chart Style is nightclouds- you may select your style from the sidebar by Scrolling Down !!')
