@@ -614,7 +614,7 @@ with col[1]:
         ###--------MACD Chart---------------------------------------------------------------------------------------------###
         st.write('Note:- Default Chart Style is nightclouds- you may select your style from the sidebar by Scrolling Down !!')
         st.write(f'{selected_ticker} - MACD <12_26_9> [Signal->Orange,MACD->Blue]')
-        df_macd = data.tail(250).copy()
+        df_macd = data.copy()
         #Get the 12-day EMA of the closing price
         k = df_macd['close'].ewm(span=12, adjust=False, min_periods=12).mean()
         #Get the 26-day EMA of the closing price
