@@ -614,7 +614,7 @@ with col[1]:
         ###--------MACD Chart---------------------------------------------------------------------------------------------###
         st.write('Note:- Default Chart Style is nightclouds- you may select your style from the sidebar by Scrolling Down !!')
         st.write(f'{selected_ticker} - MACD <12_26_9> [Signal->Orange,MACD->Blue]')
-        df_macd = data.copy()
+        df_macd = data.tail(300)copy()
         #Get the 12-day EMA of the closing price
         k = df_macd['close'].ewm(span=12, adjust=False, min_periods=12).mean()
         #Get the 26-day EMA of the closing price
@@ -656,7 +656,7 @@ with col[1]:
 
         ####  Donchain channel
         #For Calcultation Dochian Channel
-        df_dc = data.tail(100).copy()
+        df_dc = data.tail(120).copy()
         st.write("DONCHAIN CHANNEL - Volatility Indicator to identify price trends & optimal entry & exit in ranging markets.")
         period = 10
         df_dc['Upper'] = df_dc['high'].rolling(period).max()
@@ -697,7 +697,7 @@ with col[1]:
         #df_ma = df_macd[columns_to_copy]
         st.write(f'{selected_ticker}- Multi Period SMA [ 9->Blue, 20->Green ,50->Red, 100-> Purple]')
         #st.dataframe(ta_df)
-        df_ma = ta_df.tail(200).copy()
+        df_ma = ta_df.copy()
         df_ma = df_ma.set_index('Date')
         df_ma.index = pd.to_datetime(df_ma.index)  # Ensure index is datetime
         #st.dataframe(df_ma)
@@ -720,8 +720,8 @@ with col[1]:
             mpf.make_addplot(df_ma['SMA_9'], color='#2053c7', width = 2.0, panel=0),
             mpf.make_addplot(df_ma['SMA_20'], color='#235a56', width = 2.5, panel=0),
             mpf.make_addplot(df_ma['SMA_50'], color='#c6213d', width = 3.0, panel=0),
-            mpf.make_addplot(df_ma['SMA_100'], color='#733bac', width = 4.0, panel=0)
-            #mpf.make_addplot(df_ma['SMA_200'], color='#9b924c', width = 0.8, panel=0)
+            mpf.make_addplot(df_ma['SMA_100'], color='#733bac', width = 4.0, panel=0),
+            mpf.make_addplot(df_ma['SMA_200'], color='#9b924c', width = 0.8, panel=0)
             #mpf.make_addplot(df_ma['SMA_500'], color=sma_colors['sma500'], panel=0)
         ]
         #st.dataframe(df_ma.head(3))
