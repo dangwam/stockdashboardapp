@@ -772,7 +772,7 @@ with col[1]:
                 else : maflag2 = "SMA200"
 
                 #print(long_period, short_period)
-                st.dataframe(df)
+                #st.dataframe(df)
                 if (short_period == 9 and long_period == 21):
                     df[maflag1] = df['close'].rolling(window=9).mean()
                     df[maflag2] = df['close'].rolling(window=21).mean()
@@ -818,8 +818,8 @@ with col[1]:
                 apds4 = [
                         #Golden Crossover
                         mpf.make_addplot(up_sma100,color = 'green',width = 3.0, panel=0,),
-                        mpf.make_addplot(down_sma100,color = '#FF8849',width = 3.0, panel=0,),
-                        mpf.make_addplot(up_sma21,color = '#0496ff',panel=0,width = 3.0, linestyle='dashdot'),
+                        mpf.make_addplot(down_sma100,color = 'orange',width = 3.0, panel=0,),
+                        mpf.make_addplot(up_sma21,color = 'blue',panel=0,width = 3.0, linestyle='dashdot'),
                         mpf.make_addplot(gco,type='scatter',markersize=200,marker='v',color='red',panel=0),
                         mpf.make_addplot(dco,type='scatter',markersize=200,marker='^',color='green',panel=0),
                     ]
