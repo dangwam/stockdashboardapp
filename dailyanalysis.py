@@ -990,7 +990,7 @@ with col[2]:
         st.write('Index ETFs- Trends')
         # Apply highlighting to the trend DataFrame
         styled_index_trend_df = index_trend_df.style.map(highlight_trends, subset=['Trend5', 'Trend10', 'Trend20', 'Trend50','Trend100','Trend150'])
-        st.dataframe(styled_index_trend_df)
+        st.dataframe(styled_index_trend_df, hide_index = True)
 
         st.write('Index ETFs- ALL Data')
         st.dataframe(index_cp)
@@ -1005,7 +1005,7 @@ with col[2]:
         st.write('Industry- Trends')
         # Apply highlighting to the trend DataFrame
         styled_ind_trend_df = ind_trend_df.style.map(highlight_trends, subset=['Trend5', 'Trend10', 'Trend20', 'Trend50','Trend100','Trend150'])
-        st.dataframe(styled_ind_trend_df)
+        st.dataframe(styled_ind_trend_df, hide_index = True)
         st.write('Relative Price Movement of Industry ETFs starting from the Start Date in the sidebar ! Displaying latest 6 entries.')
         st.dataframe(relative_df)
 
