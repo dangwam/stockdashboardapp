@@ -144,9 +144,37 @@ def get_industry_data(stocks, start_date, end_date):
     data = yf.download(stocks, start=start_date).dropna()
     data_close = round(data['Adj Close'], 2)
     df_relative = round(data_close / data_close.iloc[0] * 100, 1)
-            
-    return df_relative, data_close
+    # Function to calculate trend for different periods
+    def calculate_trend(stock_data, period):
+        if len(stock_data) >= period:
+            trend_diff = stock_data.iloc[-1] - stock_data.iloc[-period]
+            return 'Rising' if trend_diff > 0 else 'Falling'
+        else:
+            return 'Not Enough Data'
 
+    # Create a trends DataFrame with multiple trend periods
+    trends = []
+    for stock in stocks:
+        trends.append({
+            'Sector': stock,
+            'Trend5': calculate_trend(df_relative[stock], 5),
+            'Trend10': calculate_trend(df_relative[stock], 10),
+            'Trend20': calculate_trend(df_relative[stock], 20),
+            'Trend50': calculate_trend(df_relative[stock], 50),
+            'Trend100': calculate_trend(df_relative[stock], 100),
+            'Trend150': calculate_trend(df_relative[stock], 150)
+        })
+    
+    trend_df = pd.DataFrame(trends)
+            
+    return df_relative, data_close, trend_df
+
+def highlight_trends(val):
+    """
+    Highlight the cell red if 'Falling' and green if 'Rising'.
+    """
+    color = 'green' if val == 'Rising' else 'red' if val == 'Falling' else ''
+    return f'background-color: {color}'
 
 
 @st.cache_data
@@ -954,28 +982,37 @@ with col[2]:
         st.header('Breadth Analysis of Market Components!')
         #### Relative Price Data for Indexes  SPY, QQQ, IWM, DIA, TLT, OILK, RINF, VIXY
         index_etfs = ['SPY', 'DIA', 'QQQ', 'TLT', 'GLD', 'SLV', 'OILK', 'RINF', 'VIXY']
-        index_df, index_cp = get_industry_data(index_etfs, start_date, end_date)
+        index_df, index_cp, index_trend_df = get_industry_data(index_etfs, start_date, end_date)
         # Suppress the time part and display just the date portion
         index_df.index = index_df.index.strftime('%Y-%m-%d')
         index_df = index_df.sort_index().tail(6)
         #print(relative_df.info())
+        st.write('Index ETFs- Trends')
+        # Apply highlighting to the trend DataFrame
+        styled_index_trend_df = index_trend_df.style.map(highlight_trends, subset=['Trend5', 'Trend10', 'Trend20', 'Trend50','Trend100','Trend150'])
+        st.dataframe(styled_index_trend_df)
+
         st.write('Index ETFs- ALL Data')
         st.dataframe(index_cp)
 
         #### Relative Price Data for Industry ETF's 
         industry_etfs = ['XLK', 'XLB', 'XLI', 'XLE', 'XLV', 'XLY', 'XLF', 'XLU', 'XLP']
-        relative_df, industry_cp = get_industry_data(industry_etfs, start_date, end_date)
+        relative_df, industry_cp, ind_trend_df = get_industry_data(industry_etfs, start_date, end_date)
         # Suppress the time part and display just the date portion
         relative_df.index = relative_df.index.strftime('%Y-%m-%d')
         relative_df = relative_df.sort_index().tail(6)
         #print(relative_df.info())
+        st.write('Industry- Trends')
+        # Apply highlighting to the trend DataFrame
+        styled_ind_trend_df = ind_trend_df.style.map(highlight_trends, subset=['Trend5', 'Trend10', 'Trend20', 'Trend50','Trend100','Trend150'])
+        st.dataframe(styled_ind_trend_df)
         st.write('Relative Price Movement of Industry ETFs starting from the Start Date in the sidebar ! Displaying latest 6 entries.')
         st.dataframe(relative_df)
 
         
         #### Relative Price Data for Crypto
         crypto_list = ['BTC-USD', 'MSTR', 'BITX', 'BITO', 'ARKB', 'MARA', 'YBTC']
-        crypto_df, crypto_cp = get_industry_data(crypto_list, start_date, end_date)
+        crypto_df, crypto_cp, cry_trend_df = get_industry_data(crypto_list, start_date, end_date)
         crypto_cp['BTC_BITO'] = round(((crypto_cp['BTC-USD']) / 1000) / crypto_cp['BITO'], 2)
         # Suppress the time part and display just the date portion
         crypto_df.index = crypto_df.index.strftime('%Y-%m-%d')
