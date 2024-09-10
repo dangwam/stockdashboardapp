@@ -108,8 +108,8 @@ def get_sp500_components():
     df = pd.read_html("https://en.wikipedia.org/wiki/List_of_S%26P_500_companies")
     df = df[0]
     tickers = df["Symbol"].to_list()
-    extended_symbols = ['RIVN', 'AVGO', 'SPY', 'QQQ', 'TSLA', 'MA', 'PLTR', 'SOFI', 'PFE', 'WBA','BJ', 'ALAB','ZOM','NMRA','IREN','DKNG','RKLB','APLT']
-    extended_companies = ['Rivian Automotive', 'Broadcom Inc', 'SPDR S&P 500 ETF', 'Invesco QQQ Trust', 'Tesla', 'Mastercard', 'Palantir', 'Sofi', 'Pfizer', 'WallGreens','BJ','AsteraLab-IPO','ZOmedica-P','Nemura-IPO','IREnergy-IPO','DraftKng-P','Rocketlab-P','APLT-P']
+    extended_symbols = ['RIVN', 'AVGO', 'SPY', 'QQQ', 'TSLA', 'MA', 'PLTR', 'SOFI', 'PFE', 'WBA','BJ', 'ALAB','ZOM','NMRA','IREN','DKNG','RKLB','APLT','SPCE']
+    extended_companies = ['Rivian Automotive', 'Broadcom Inc', 'SPDR S&P 500 ETF', 'Invesco QQQ Trust', 'Tesla', 'Mastercard', 'Palantir', 'Sofi', 'Pfizer', 'WallGreens','BJ','AsteraLab-IPO','ZOmedica-P','Nemura-IPO','IREnergy-IPO','DraftKng-P','Rocketlab-P','APLT-P','VirginGalactic']
     # Combine tickers with extended symbols
     tickers.extend(extended_symbols)
     ##tickers_companies_dict = dict(zip(df["Symbol"], df["Security"]))
@@ -144,9 +144,37 @@ def get_industry_data(stocks, start_date, end_date):
     data = yf.download(stocks, start=start_date).dropna()
     data_close = round(data['Adj Close'], 2)
     df_relative = round(data_close / data_close.iloc[0] * 100, 1)
-            
-    return df_relative, data_close
+    # Function to calculate trend for different periods
+    def calculate_trend(stock_data, period):
+        if len(stock_data) >= period:
+            trend_diff = stock_data.iloc[-1] - stock_data.iloc[-period]
+            return 'Rising' if trend_diff > 0 else 'Falling'
+        else:
+            return 'Not Enough Data'
 
+    # Create a trends DataFrame with multiple trend periods
+    trends = []
+    for stock in stocks:
+        trends.append({
+            'Sector': stock,
+            'Trend5': calculate_trend(df_relative[stock], 5),
+            'Trend10': calculate_trend(df_relative[stock], 10),
+            'Trend20': calculate_trend(df_relative[stock], 20),
+            'Trend50': calculate_trend(df_relative[stock], 50),
+            'Trend100': calculate_trend(df_relative[stock], 100),
+            'Trend150': calculate_trend(df_relative[stock], 150)
+        })
+    
+    trend_df = pd.DataFrame(trends)
+            
+    return df_relative, data_close, trend_df
+
+def highlight_trends(val):
+    """
+    Highlight the cell red if 'Falling' and green if 'Rising'.
+    """
+    color = 'green' if val == 'Rising' else 'red' if val == 'Falling' else ''
+    return f'background-color: {color}'
 
 
 @st.cache_data
@@ -414,9 +442,11 @@ def golden_cal(df):
 
 with st.sidebar:
     with st.sidebar.form("Submit",clear_on_submit=False, border= True):
+        # Get the current date
+        today = datetime.date.today()
         available_tickers, tickers_companies_dict = get_sp500_components()
         selected_ticker = st.selectbox("Select Ticker", available_tickers, format_func=tickers_companies_dict.get)
-        start_date = st.date_input("Start date", datetime.date(2010, 1, 1))
+        start_date = st.date_input("Start date", value=datetime.date(2010, 1, 1), min_value=datetime.date(2010, 1, 1), max_value=today)
         end_date = st.date_input("End date", datetime.date.today())
         df = load_data(selected_ticker, start_date, end_date)['Close'].reset_index()
         # Find the maximum date in the DataFrame
@@ -607,12 +637,12 @@ with col[1]:
         ta_df = ta_df.reset_index()
         ta_df["Date"] = pd.to_datetime(ta_df["Date"])
         ta_df["Date"] = ta_df["Date"].dt.strftime("%Y-%m-%d")
-        st.dataframe(ta_df.tail(8), hide_index=True)
+        st.dataframe(ta_df.tail(100), hide_index=True)
         ###### Next Plot the charts
         ###--------MACD Chart---------------------------------------------------------------------------------------------###
         st.write('Note:- Default Chart Style is nightclouds- you may select your style from the sidebar by Scrolling Down !!')
         st.write(f'{selected_ticker} - MACD <12_26_9> [Signal->Orange,MACD->Blue]')
-        df_macd = data.tail(250).copy()
+        df_macd = data.tail(300).copy()
         #Get the 12-day EMA of the closing price
         k = df_macd['close'].ewm(span=12, adjust=False, min_periods=12).mean()
         #Get the 26-day EMA of the closing price
@@ -654,7 +684,7 @@ with col[1]:
 
         ####  Donchain channel
         #For Calcultation Dochian Channel
-        df_dc = data.tail(100).copy()
+        df_dc = data.tail(120).copy()
         st.write("DONCHAIN CHANNEL - Volatility Indicator to identify price trends & optimal entry & exit in ranging markets.")
         period = 10
         df_dc['Upper'] = df_dc['high'].rolling(period).max()
@@ -695,12 +725,12 @@ with col[1]:
         #df_ma = df_macd[columns_to_copy]
         st.write(f'{selected_ticker}- Multi Period SMA [ 9->Blue, 20->Green ,50->Red, 100-> Purple]')
         #st.dataframe(ta_df)
-        df_ma = ta_df.tail(200).copy()
+        df_ma = ta_df.tail(250).copy()
         df_ma = df_ma.set_index('Date')
         df_ma.index = pd.to_datetime(df_ma.index)  # Ensure index is datetime
         #st.dataframe(df_ma)
         #df_ma['SMA_9'] = df_ma['close'].rolling(window=9).mean()
-        df_ma['SMA_200'] = df_ma['close'].rolling(window=200).mean()
+        #df_ma['SMA_200'] = df_ma['close'].rolling(window=200).mean()
         #df_ma.rename(columns=rename_dict, inplace=True)
         #df_ma = df_ma.dropna()
         #df_ma = df_ma.fillna(method='ffill')
@@ -708,7 +738,7 @@ with col[1]:
         s20 = df_ma['SMA_20']
         s50 = df_ma['SMA_50']
         s100 = df_ma['SMA_100']
-        s200 = df_ma['SMA_200']
+        #s200 = df_ma['SMA_200']
 
         # Generate the color lists for each SMA using the function
         #sma_colors = gen_sma_colors(df_ma)
@@ -747,7 +777,7 @@ with col[1]:
         st.write("A golden cross is a chart pattern in which a relatively short-term moving average crosses above a long-term moving average. Choose short and long periods to proceed")
         frames = [9,21,50,100,200]
         maflag1 = ""
-        df = data.tail(200).copy()
+        df = data.copy()
         with st.form("aform"):
             short_period = st.selectbox("Select Short Period", frames)
             long_period = st.selectbox("Select Long Period", frames)
@@ -769,8 +799,8 @@ with col[1]:
                 elif long_period == 100: maflag2 = "SMA100"
                 else : maflag2 = "SMA200"
 
-                print(long_period, short_period)
-                
+                #print(long_period, short_period)
+                #st.dataframe(df)
                 if (short_period == 9 and long_period == 21):
                     df[maflag1] = df['close'].rolling(window=9).mean()
                     df[maflag2] = df['close'].rolling(window=21).mean()
@@ -816,8 +846,8 @@ with col[1]:
                 apds4 = [
                         #Golden Crossover
                         mpf.make_addplot(up_sma100,color = 'green',width = 3.0, panel=0,),
-                        mpf.make_addplot(down_sma100,color = '#FF8849',width = 3.0, panel=0,),
-                        mpf.make_addplot(up_sma21,color = '#0496ff',panel=0,width = 3.0, linestyle='dashdot'),
+                        mpf.make_addplot(down_sma100,color = 'orange',width = 3.0, panel=0,),
+                        mpf.make_addplot(up_sma21,color = 'blue',panel=0,width = 3.0, linestyle='dashdot'),
                         mpf.make_addplot(gco,type='scatter',markersize=200,marker='v',color='red',panel=0),
                         mpf.make_addplot(dco,type='scatter',markersize=200,marker='^',color='green',panel=0),
                     ]
@@ -952,28 +982,37 @@ with col[2]:
         st.header('Breadth Analysis of Market Components!')
         #### Relative Price Data for Indexes  SPY, QQQ, IWM, DIA, TLT, OILK, RINF, VIXY
         index_etfs = ['SPY', 'DIA', 'QQQ', 'TLT', 'GLD', 'SLV', 'OILK', 'RINF', 'VIXY']
-        index_df, index_cp = get_industry_data(index_etfs, start_date, end_date)
+        index_df, index_cp, index_trend_df = get_industry_data(index_etfs, start_date, end_date)
         # Suppress the time part and display just the date portion
         index_df.index = index_df.index.strftime('%Y-%m-%d')
         index_df = index_df.sort_index().tail(6)
         #print(relative_df.info())
+        st.write('Index ETFs- Trends')
+        # Apply highlighting to the trend DataFrame
+        styled_index_trend_df = index_trend_df.style.map(highlight_trends, subset=['Trend5', 'Trend10', 'Trend20', 'Trend50','Trend100','Trend150'])
+        st.dataframe(styled_index_trend_df, hide_index = True)
+
         st.write('Index ETFs- ALL Data')
         st.dataframe(index_cp)
 
         #### Relative Price Data for Industry ETF's 
         industry_etfs = ['XLK', 'XLB', 'XLI', 'XLE', 'XLV', 'XLY', 'XLF', 'XLU', 'XLP']
-        relative_df, industry_cp = get_industry_data(industry_etfs, start_date, end_date)
+        relative_df, industry_cp, ind_trend_df = get_industry_data(industry_etfs, start_date, end_date)
         # Suppress the time part and display just the date portion
         relative_df.index = relative_df.index.strftime('%Y-%m-%d')
         relative_df = relative_df.sort_index().tail(6)
         #print(relative_df.info())
+        st.write('Industry- Trends')
+        # Apply highlighting to the trend DataFrame
+        styled_ind_trend_df = ind_trend_df.style.map(highlight_trends, subset=['Trend5', 'Trend10', 'Trend20', 'Trend50','Trend100','Trend150'])
+        st.dataframe(styled_ind_trend_df, hide_index = True)
         st.write('Relative Price Movement of Industry ETFs starting from the Start Date in the sidebar ! Displaying latest 6 entries.')
         st.dataframe(relative_df)
 
         
         #### Relative Price Data for Crypto
         crypto_list = ['BTC-USD', 'MSTR', 'BITX', 'BITO', 'ARKB', 'MARA', 'YBTC']
-        crypto_df, crypto_cp = get_industry_data(crypto_list, start_date, end_date)
+        crypto_df, crypto_cp, cry_trend_df = get_industry_data(crypto_list, start_date, end_date)
         crypto_cp['BTC_BITO'] = round(((crypto_cp['BTC-USD']) / 1000) / crypto_cp['BITO'], 2)
         # Suppress the time part and display just the date portion
         crypto_df.index = crypto_df.index.strftime('%Y-%m-%d')
@@ -998,13 +1037,3 @@ with col[2]:
                 - :blue[**Version**]: [git](https://github.com/dangwam/stockdashboardapp.git)
                     
                 ''')
-    
-   
-
-
-
-
-
-
-
-   
