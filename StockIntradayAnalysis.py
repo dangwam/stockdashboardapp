@@ -21,8 +21,8 @@ def get_sp500_components():
     df = pd.read_html("https://en.wikipedia.org/wiki/List_of_S%26P_500_companies")
     df = df[0]
     tickers = df["Symbol"].to_list()
-    extended_symbols = ['RIVN', 'AVGO', 'SPY', 'QQQ', 'TSLA', 'MA', 'BITO','BTC-USD']
-    extended_companies = ['Rivian Automotive', 'Broadcom Inc', 'SPDR S&P 500 ETF', 'Invesco QQQ Trust', 'Tesla', 'Mastercard', 'BITO','BTCUSD']
+    extended_symbols = ['RIVN', 'AVGO', 'SPY', 'QQQ', 'TSLA', 'MA', 'BITO','BTC-USD', 'NIO', 'LCID', 'GME', 'SPCE', 'NKLA']
+    extended_companies = ['Rivian Automotive', 'Broadcom Inc', 'SPDR S&P 500 ETF', 'Invesco QQQ Trust', 'Tesla', 'Mastercard', 'BITO','BTCUSD', 'NIO', 'LUCID', 'GME', 'virgin galactic', 'Nikola']
     # Combine tickers with extended symbols
     tickers.extend(extended_symbols)
     tickers_companies_dict = dict(zip(df["Symbol"], df["Security"]), **dict(zip(extended_symbols, extended_companies)))
@@ -52,9 +52,37 @@ def get_industry_data(stocks, period):
     data = yf.download(stocks, period = period, interval = '1d').dropna()
     data_close = round(data['Adj Close'], 2)
     df_relative = round(data_close / data_close.iloc[0] * 100, 1)
-            
-    return df_relative, data_close
+    # Function to calculate trend for different periods
+    def calculate_trend(stock_data, period):
+        if len(stock_data) >= period:
+            trend_diff = stock_data.iloc[-1] - stock_data.iloc[-period]
+            return 'Rising' if trend_diff > 0 else 'Falling'
+        else:
+            return 'Not Enough Data'
 
+    # Create a trends DataFrame with multiple trend periods
+    trends = []
+    for stock in stocks:
+        trends.append({
+            'Sector': stock,
+            'Trend5': calculate_trend(df_relative[stock], 5),
+            'Trend10': calculate_trend(df_relative[stock], 10),
+            'Trend20': calculate_trend(df_relative[stock], 20),
+            'Trend50': calculate_trend(df_relative[stock], 50),
+            'Trend100': calculate_trend(df_relative[stock], 100),
+            'Trend150': calculate_trend(df_relative[stock], 150)
+        })
+    
+    trend_df = pd.DataFrame(trends)
+            
+    return df_relative, data_close, trend_df      
+    
+def highlight_trends(val):
+    """
+    Highlight the cell red if 'Falling' and green if 'Rising'.
+    """
+    color = 'green' if val == 'Rising' else 'red' if val == 'Falling' else ''
+    return f'background-color: {color}'
 # Analyze the trend for each quartile subset
 def analyze_trend(subset):
         if subset['Close'].iloc[-1] > subset['Close'].iloc[0]:
@@ -484,7 +512,7 @@ with col[0]:
    
 with col[1]:
      #st.write('*****Data Inferences*****',)
-     temp_df = stock_df.tail(200).copy()
+     temp_df = stock_df.tail(300).copy()
      trend_q1, trend_q2, trend_q3, trend_q4, trend_q5, trend_q6= find_trend(temp_df)
      #st.metric("5% quartile Trend is ", value=trend_q1, delta = trend_q1 )
      #st.metric("10% quartile Trend is ", value=trend_q2, delta = trend_q2 )
@@ -492,15 +520,15 @@ with col[1]:
      #st.metric("50% quartile Trend is ", value=trend_q4, delta = trend_q4 )
      st.metric("75% quartile Trend is ", value=trend_q5, delta = trend_q5 )
      #st.metric("100% quartile Trend is ", value=trend_q6, delta = trend_q6 )
-     st.subheader('Price-Volume EMA(21/50)')
+     st.write('Price & Volume EMA Plot. blue->11ema, purple->21ema')
 #st.dataframe(stock_df[['Open','High','Low','Close','Volume']].tail(5),hide_index=False)
     #temp_df = stock_df.copy()
      temp_df = temp_df.drop(columns=['Adj Close'], axis=1)
      temp_df.index = pd.to_datetime(temp_df.index)  # Ensure index is datetime
      #temp_df = temp_df.rename(columns={'Volume':'Close'})
-     #temp_df['9ema'] =  round((temp_df['Volume'].ewm(span=9, adjust=False, min_periods=9).mean() / 1000000), 2)
-     temp_df['21ema'] =  round((temp_df['Volume'].ewm(span=21, adjust=False, min_periods=21).mean() / 1000000), 2)
-     temp_df['50ema'] =  round((temp_df['Volume'].ewm(span=50, adjust=False, min_periods=50).mean() / 1000000), 2)
+     temp_df['9ema'] =  round((temp_df['Volume'].ewm(span=11, adjust=False, min_periods=11).mean() / 100) , 2)
+     temp_df['21ema'] =  round((temp_df['Volume'].ewm(span=21, adjust=False, min_periods=21).mean() / 100), 2)
+     #temp_df['50ema'] =  round((temp_df['Volume'].ewm(span=50, adjust=False, min_periods=50).mean()) / 100, 2)
      #temp_df['vol_100ema'] =  round((temp_df['Volume'].ewm(span=100, adjust=False, min_periods=100).mean() / 1000000), 2)
      
 
@@ -508,9 +536,9 @@ with col[1]:
      #s50 = temp_df['vol_50ema']
 
      apds5 = [
-             #mpf.make_addplot(temp_df['9ema'], color='red', width = 1.5, panel=0),
-             mpf.make_addplot(temp_df['21ema'], color='blue', width = 2.5, panel=0),
-             mpf.make_addplot(temp_df['50ema'], color='purple', width = 3.0, panel=0)
+             mpf.make_addplot(temp_df['9ema'], color='blue', width = 1.5, panel=0),
+             mpf.make_addplot(temp_df['21ema'], color='purple', width = 2.5, panel=0)
+             #mpf.make_addplot(temp_df['50ema'], color='purple', width = 3.0, panel=0)
              
             ]
      
@@ -532,19 +560,39 @@ with col[1]:
      st.write('Last 6 volume rows')
      st.dataframe(temp_df,hide_index=True)
 
+     
+     st.header('Breadth Analysis of Market Components!')
+     #### Relative Price Data for Indexes  SPY, QQQ, IWM, DIA, TLT, OILK, RINF, VIXY
+     index_etfs = ['SPY', 'DIA', 'QQQ', 'TLT', 'GLD', 'SLV', 'OILK', 'RINF', 'VIXY']
+     index_df, index_cp, index_trend_df = get_industry_data(index_etfs, '2y')
+     # Suppress the time part and display just the date portion
+     index_df.index = index_df.index.strftime('%Y-%m-%d')
+     index_df = index_df.sort_index().tail(6)
+     #print(relative_df.info())
+     st.write('Index ETFs- Trends')
+     # Apply highlighting to the trend DataFrame
+     styled_index_trend_df = index_trend_df.style.map(highlight_trends, subset=['Trend5', 'Trend10', 'Trend20', 'Trend50','Trend100','Trend150'])
+     st.dataframe(styled_index_trend_df, hide_index = True)
+     st.write('Index ETFs- ALL Data')
+     st.dataframe(index_cp)
+
      #### Relative Price Data for Industry ETF's 
      industry_etfs = ['XLK', 'XLB', 'XLI', 'XLE', 'XLV', 'XLY', 'XLF', 'XLU', 'XLP']
-     relative_df, industry_cp = get_industry_data(industry_etfs, '5y')
-    # Suppress the time part and display just the date portion
+     relative_df, industry_cp, ind_trend_df = get_industry_data(industry_etfs, '2y')
+     # Suppress the time part and display just the date portion
      relative_df.index = relative_df.index.strftime('%Y-%m-%d')
      relative_df = relative_df.sort_index().tail(6)
-        #print(relative_df.info())
-     st.write('Relative Price Movement of Industry ETFs ! Displaying latest 6 entries.')
+     #print(relative_df.info())
+     st.write('Industry- Trends')
+     # Apply highlighting to the trend DataFrame
+     styled_ind_trend_df = ind_trend_df.style.map(highlight_trends, subset=['Trend5', 'Trend10', 'Trend20', 'Trend50','Trend100','Trend150'])
+     st.dataframe(styled_ind_trend_df, hide_index = True)
+     st.write('Relative Price Movement of Industry ETFs starting from the Start Date in the sidebar ! Displaying latest 6 entries.')
      st.dataframe(relative_df)
-
+     
      #### Relative Price Data for Crypto
      crypto_list = ['BTC-USD', 'MSTR', 'BITX', 'BITO', 'ARKB', 'MARA', 'YBTC']
-     crypto_df, crypto_cp = get_industry_data(crypto_list, '3y')  
+     crypto_df, crypto_cp, dummy = get_industry_data(crypto_list, '3y')  
      crypto_cp['BTC_BITO'] = round(((crypto_cp['BTC-USD']) / 1000) / crypto_cp['BITO'], 2)
         # Suppress the time part and display just the date portion
      crypto_df.index = crypto_df.index.strftime('%Y-%m-%d')
