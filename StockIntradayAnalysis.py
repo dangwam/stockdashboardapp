@@ -578,7 +578,7 @@ with col[1]:
 
      #### Relative Price Data for Industry ETF's 
      industry_etfs = ['XLK', 'XLB', 'XLI', 'XLE', 'XLV', 'XLY', 'XLF', 'XLU', 'XLP']
-     relative_df, industry_cp, ind_trend_df = get_industry_data(industry_etfs, '2y')
+     relative_df, industry_cp, ind_trend_df = get_industry_data(industry_etfs, 'max')
      # Suppress the time part and display just the date portion
      relative_df.index = relative_df.index.strftime('%Y-%m-%d')
      relative_df = relative_df.sort_index().tail(6)
@@ -592,7 +592,7 @@ with col[1]:
      
      #### Relative Price Data for Crypto
      crypto_list = ['BTC-USD', 'MSTR', 'BITX', 'BITO', 'ARKB', 'MARA', 'YBTC']
-     crypto_df, crypto_cp, dummy = get_industry_data(crypto_list, '3y')  
+     crypto_df, crypto_cp, dummy = get_industry_data(crypto_list, 'max')  
      crypto_cp['BTC_BITO'] = round(((crypto_cp['BTC-USD']) / 1000) / crypto_cp['BITO'], 2)
         # Suppress the time part and display just the date portion
      crypto_df.index = crypto_df.index.strftime('%Y-%m-%d')
