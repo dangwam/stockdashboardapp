@@ -211,9 +211,9 @@ with st.sidebar:
         #print(stock_df.columns)
         submitted_form = st.form_submit_button("Submit")
 
-    st.sidebar.caption(f'{selected_ticker} ClosingPrice:blue[LineChart]:stars:')
-    fig = px.line(stock_df, x=stock_df.index, y=stock_df.Close, template= 'simple_white')
-    st.sidebar.plotly_chart(fig,use_container_width=True)
+    #st.sidebar.caption(f'{selected_ticker} ClosingPrice:blue[LineChart]:stars:')
+    #fig = px.line(stock_df, x=stock_df.index, y=stock_df.Close, template= 'simple_white')
+    #st.sidebar.plotly_chart(fig,use_container_width=True)
         
 
     chart_styles = [
