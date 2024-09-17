@@ -21,8 +21,8 @@ def get_sp500_components():
     df = pd.read_html("https://en.wikipedia.org/wiki/List_of_S%26P_500_companies")
     df = df[0]
     tickers = df["Symbol"].to_list()
-    extended_symbols = ['RIVN', 'AVGO', 'SPY', 'QQQ', 'TSLA', 'MA', 'BITO','BTC-USD', 'NIO', 'LCID', 'GME', 'SPCE', 'NKLA']
-    extended_companies = ['Rivian Automotive', 'Broadcom Inc', 'SPDR S&P 500 ETF', 'Invesco QQQ Trust', 'Tesla', 'Mastercard', 'BITO','BTCUSD', 'NIO', 'LUCID', 'GME', 'virgin galactic', 'Nikola']
+    extended_symbols = ['RIVN', 'AVGO', 'SPY', 'QQQ', 'TSLA', 'MA', 'BITO','BTC-USD', 'NIO', 'LCID', 'GME', 'SPCE', 'NKLA', 'HYLN']
+    extended_companies = ['Rivian Automotive', 'Broadcom Inc', 'SPDR S&P 500 ETF', 'Invesco QQQ Trust', 'Tesla', 'Mastercard', 'BITO','BTCUSD', 'NIO', 'LUCID', 'GME', 'virgin galactic', 'Nikola', 'HYLION']
     # Combine tickers with extended symbols
     tickers.extend(extended_symbols)
     tickers_companies_dict = dict(zip(df["Symbol"], df["Security"]), **dict(zip(extended_symbols, extended_companies)))
