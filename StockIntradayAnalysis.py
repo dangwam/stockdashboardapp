@@ -21,8 +21,8 @@ def get_sp500_components():
     df = pd.read_html("https://en.wikipedia.org/wiki/List_of_S%26P_500_companies")
     df = df[0]
     tickers = df["Symbol"].to_list()
-    extended_symbols = ['RIVN', 'AVGO', 'SPY', 'QQQ', 'TSLA', 'MA', 'BITO','BTC-USD', 'NIO', 'LCID', 'GME', 'SPCE', 'NKLA', 'HYLN']
-    extended_companies = ['Rivian Automotive', 'Broadcom Inc', 'SPDR S&P 500 ETF', 'Invesco QQQ Trust', 'Tesla', 'Mastercard', 'BITO','BTCUSD', 'NIO', 'LUCID', 'GME', 'virgin galactic', 'Nikola', 'HYLION']
+    extended_symbols = ['RIVN', 'AVGO', 'SPY', 'QQQ', 'TSLA', 'MA', 'BITO','BTC-USD', 'NIO', 'LCID', 'GME', 'SPCE', 'NKLA']
+    extended_companies = ['Rivian Automotive', 'Broadcom Inc', 'SPDR S&P 500 ETF', 'Invesco QQQ Trust', 'Tesla', 'Mastercard', 'BITO','BTCUSD', 'NIO', 'LUCID', 'GME', 'virgin galactic', 'Nikola']
     # Combine tickers with extended symbols
     tickers.extend(extended_symbols)
     tickers_companies_dict = dict(zip(df["Symbol"], df["Security"]), **dict(zip(extended_symbols, extended_companies)))
@@ -34,13 +34,13 @@ def load_data(ticker,interval):
      if interval == '1m':
         stock_df = yf.download(tickers = [ticker], interval= '1m')
      if interval == '5m':
-        stock_df = yf.download(tickers = [ticker], interval= '5m')
+        stock_df = yf.download(ticker, interval= interval, period = '60d')
      if interval == '15m':
-        stock_df = yf.download(tickers = [ticker], interval= '15m')
+        stock_df = yf.download(ticker, interval= interval, period = '60d')
      if interval == '1h':
-        stock_df = yf.download(tickers = [ticker], interval= '1h')
+        stock_df = yf.download(ticker, interval= interval, period = "500d")
      if interval == '1d':
-        stock_df = yf.download(tickers = ticker, interval= '1d')
+        stock_df = yf.download(tickers = ticker, period = '10y', interval= '1d')
 
 
      return stock_df
