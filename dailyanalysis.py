@@ -108,8 +108,8 @@ def get_sp500_components():
     df = pd.read_html("https://en.wikipedia.org/wiki/List_of_S%26P_500_companies")
     df = df[0]
     tickers = df["Symbol"].to_list()
-    extended_symbols = ['RIVN', 'AVGO', 'SPY', 'QQQ', 'TSLA', 'MA', 'PLTR', 'SOFI', 'PFE', 'WBA','BJ', 'ALAB','ZOM','NMRA','IREN','DKNG','RKLB','APLT','SPCE']
-    extended_companies = ['Rivian Automotive', 'Broadcom Inc', 'SPDR S&P 500 ETF', 'Invesco QQQ Trust', 'Tesla', 'Mastercard', 'Palantir', 'Sofi', 'Pfizer', 'WallGreens','BJ','AsteraLab-IPO','ZOmedica-P','Nemura-IPO','IREnergy-IPO','DraftKng-P','Rocketlab-P','APLT-P','VirginGalactic']
+    extended_symbols = ['RIVN', 'AVGO', 'SPY', 'QQQ', 'TSLA', 'MA', 'PLTR', 'SOFI', 'PFE', 'WBA','BJ', 'ALAB','ZOM','NMRA','IREN','DKNG','RKLB','APLT','SPCE', 'SSREY', 'NIO', 'MBLY', 'QS', 'RKLB', 'ACHR']
+    extended_companies = ['Rivian Automotive', 'Broadcom Inc', 'SPDR S&P 500 ETF', 'Invesco QQQ Trust', 'Tesla', 'Mastercard', 'Palantir', 'Sofi', 'Pfizer', 'WallGreens','BJ','AsteraLab-IPO','ZOmedica-P','Nemura-IPO','IREnergy-IPO','DraftKng-P','Rocketlab-P','APLT-P','VirginGalactic', 'Swiss Re', 'NIO', 'Mobilye', 'Quantum Scape', 'Archer Aviation']
     # Combine tickers with extended symbols
     tickers.extend(extended_symbols)
     ##tickers_companies_dict = dict(zip(df["Symbol"], df["Security"]))
