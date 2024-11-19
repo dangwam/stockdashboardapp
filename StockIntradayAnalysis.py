@@ -238,6 +238,8 @@ with col[0]:
             ohlc = stock_df.sort_values(by=['Datetime'],ascending=True)
             
     ta_df = pd.DataFrame()
+    st.dataframe(ohlc.tail(2))
+    st.dataframe(stock_df.tail(2))
     ta_df['open'] = round(ohlc['Open'],2)
     ta_df['close'] = round(ohlc['Close'],2)
     ta_df['volume'] = round(ohlc['Volume'],2)
