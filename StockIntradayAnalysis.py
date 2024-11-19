@@ -594,17 +594,18 @@ with col[1]:
      crypto_list = ['BTC-USD', 'MSTR', 'BITX', 'BITO', 'ARKB', 'MARA', 'YBTC']
      crypto_df, crypto_cp, dummy = get_industry_data(crypto_list, 'max')  
      crypto_cp['BTC_BITO'] = round(((crypto_cp['BTC-USD']) / 1000) / crypto_cp['BITO'], 2)
+     crypto_cp['BTC_MSTR'] = round((crypto_cp['BTC-USD'] / crypto_cp['MSTR']), 2)
         # Suppress the time part and display just the date portion
      crypto_df.index = crypto_df.index.strftime('%Y-%m-%d')
-     crypto_df = crypto_df.sort_index().tail(6)
+     crypto_df = crypto_df.sort_index()
         #print(relative_df.info())
-     st.write('Relative Price Movement of Crypto Tickers ! Displaying latest 6 entries.')
+     st.write('Relative Price Movement of Crypto Tickers !')
      st.dataframe(crypto_df)
      
      crypto_cp.index = crypto_cp.index.strftime('%Y-%m-%d')
-     crypto_cp = crypto_cp.sort_index()
+     #crypto_cp = crypto_cp.sort_index()
      st.write('Crypto Prices')
-     st.dataframe(crypto_cp.tail(6))
+     st.dataframe(crypto_cp)
 
      with st.expander('About', expanded=True):
             st.write('''
