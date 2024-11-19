@@ -6,7 +6,7 @@ import datetime as dt
 import numpy as np
 import mplfinance as mpf
 from plotly import express as px
-##
+## last change 11/19/2024
 
 ##
 
