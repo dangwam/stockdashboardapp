@@ -42,7 +42,7 @@ def load_data(ticker,interval):
      if interval == '1d':
         stock_df = yf.download(tickers = ticker, period = '10y', interval= '1d')
 
-     st.write(stock_df.reset_index().tail(2))
+     #st.write(stock_df.reset_index().tail(2))
      return stock_df
 
 @st.cache_data
@@ -238,8 +238,8 @@ with col[0]:
             ohlc = stock_df.sort_values(by=['Datetime'],ascending=True)
             
     ta_df = pd.DataFrame()
-    st.dataframe(ohlc.tail(2))
-    st.dataframe(stock_df.tail(2))
+    #st.dataframe(ohlc.tail(2))
+    #st.dataframe(stock_df.tail(2))
     ta_df['open'] = round(ohlc['Open'],2)
     ta_df['close'] = round(ohlc['Close'],2)
     ta_df['volume'] = round(ohlc['Volume'],2)
