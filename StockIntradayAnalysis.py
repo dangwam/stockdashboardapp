@@ -42,7 +42,7 @@ def load_data(ticker,interval):
      if interval == '1d':
         stock_df = yf.download(tickers = ticker, period = '10y', interval= '1d')
 
-     st.write(stock_df.tail(2))
+     st.write(stock_df.reset_index().tail(2))
      return stock_df
 
 @st.cache_data
