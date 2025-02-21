@@ -13,10 +13,6 @@ import datetime
 #from matplotlib import pyplot as plt
 #from plotly import graph_objects as go
 #yf.pdr_override()
-
-#############################################
-#####API_KEY 
-#############################################
 # Streamlit App Configuration (Best Practice)
 hide = """
             <style>
@@ -49,26 +45,31 @@ st.set_page_config(
 
 #######################
 # CSS styling
+# CSS styling
 st.markdown("""
 <style>
 
+/* Main container adjustments */
 [data-testid="block-container"] {
-    padding-left: 2rem;
-    padding-right: 2rem;
-    padding-top: 1rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-top: 2rem;
     padding-bottom: 0rem;
     margin-bottom: -7rem;
 }
 
+/* General block layout */
 [data-testid="stVerticalBlock"] {
     padding-left: 0rem;
     padding-right: 0rem;
 }
 
+/* Metric display improvements */
 [data-testid="stMetric"] {
     background-color: #393939;
     text-align: center;
     padding: 15px 0;
+    border-radius: 10px;
 }
 
 [data-testid="stMetricLabel"] {
@@ -77,39 +78,60 @@ st.markdown("""
   align-items: center;
 }
 
-[data-testid="stMetricDeltaIcon-Up"] {
-    position: relative;
-    left: 38%;
-    -webkit-transform: translateX(-50%);
-    -ms-transform: translateX(-50%);
-    transform: translateX(-50%);
-}
-
+/* Up/down trend icon adjustments */
+[data-testid="stMetricDeltaIcon-Up"], 
 [data-testid="stMetricDeltaIcon-Down"] {
     position: relative;
     left: 38%;
-    -webkit-transform: translateX(-50%);
-    -ms-transform: translateX(-50%);
     transform: translateX(-50%);
+}
+
+/* Sidebar header */
+.sidebar-header {
+    color: white;
+    background: linear-gradient(90deg, #003366, #00509e);
+    padding: 12px;
+    font-size: 20px;
+    font-weight: bold;
+    border-radius: 8px;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+/* Sidebar subheader */
+.sidebar-subheader {
+    color: white;
+    background: linear-gradient(90deg, #00509e, #0073e6);
+    padding: 8px;
+    font-size: 16px;
+    border-radius: 8px;
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+/* Sidebar padding adjustments */
+[data-testid="stSidebar"] {
+    background-color: #1e1e1e;
+    padding: 10px;
 }
 
 </style>
 """, unsafe_allow_html=True)
 
-
 #######################
 print("------------------------------------------------------------Starting-----------------------------------------------------------------------------")
-st.title("Equity Analysis App :chart_with_upwards_trend:")
-st.markdown(title_format, unsafe_allow_html=True)
 #st.write("---------------------------------------------------------------------------------------------------------------------------------------------------------")
+#st.title("Equity Analysis App :chart_with_upwards_trend:")
+st.markdown(title_format, unsafe_allow_html=True)
+
 # Load data -- data functions
 @st.cache_data
 def get_sp500_components():
     df = pd.read_html("https://en.wikipedia.org/wiki/List_of_S%26P_500_companies")
     df = df[0]
     tickers = df["Symbol"].to_list()
-    extended_symbols = ['RIVN', 'AVGO', 'SPY', 'QQQ', 'TSLA', 'MA', 'PLTR', 'SOFI', 'PFE', 'WBA','BJ', 'ALAB','ZOM','NMRA','IREN','DKNG','RKLB','APLT','SPCE', 'SSREY', 'NIO', 'MBLY', 'QS', 'RKLB', 'ACHR']
-    extended_companies = ['Rivian Automotive', 'Broadcom Inc', 'SPDR S&P 500 ETF', 'Invesco QQQ Trust', 'Tesla', 'Mastercard', 'Palantir', 'Sofi', 'Pfizer', 'WallGreens','BJ','AsteraLab-IPO','ZOmedica-P','Nemura-IPO','IREnergy-IPO','DraftKng-P','Rocketlab-P','APLT-P','VirginGalactic', 'Swiss Re', 'NIO', 'Mobilye', 'Quantum Scape', 'Archer Aviation']
+    extended_symbols = ['RIVN', 'AVGO', 'SPY', 'QQQ', 'TSLA', 'MA', 'PLTR', 'SOFI', 'PFE', 'WBA','BJ', 'ALAB','ZOM','NMRA','IREN','DKNG','RKLB','APLT','SPCE', 'SSREY', 'NIO', 'MBLY', 'QS', 'ACHR','NOK', 'WOLF', 'MSTR']
+    extended_companies = ['Rivian Automotive', 'Broadcom Inc', 'SPDR S&P 500 ETF', 'Invesco QQQ Trust', 'Tesla', 'Mastercard', 'Palantir', 'Sofi', 'Pfizer', 'WallGreens','BJ','AsteraLab-IPO','ZOmedica-P','Nemura-IPO','IREnergy-IPO','DraftKng-P','Rocketlab-P','APLT-P','VirginGalactic', 'Swiss Re', 'NIO', 'Mobilye', 'Quantum Scape', 'Archer Aviation', 'Nokia', 'Wolfsped','Microstrategy']
     # Combine tickers with extended symbols
     tickers.extend(extended_symbols)
     ##tickers_companies_dict = dict(zip(df["Symbol"], df["Security"]))
@@ -118,12 +140,11 @@ def get_sp500_components():
 
 @st.cache_data
 def load_data(symbol, start, end):
-    #start_date = datetime.date(year=min(2010,year_now-10), month=1, day=1) # Take first day and month of 10 years ago / or take first day of 2010
-    #time_start = datetime.date(year=2014, month=1, day=1)
-    #end_date = datetime.date(year=year_now, month=month_now, day=1) # Take first day of month of today's date
+    stock_df = yf.download(symbol, start, end)
+    t_df = stock_df.swaplevel(axis=1).droplevel(axis=1, level=0).reset_index()
+    t_df.columns.name = None  
+    return t_df
     
-    return yf.download(symbol, start, end)
-
 @st.cache_data
 def get_company_info(ticker):
   symbol = ticker
@@ -142,7 +163,7 @@ def get_industry_data(stocks, start_date, end_date):
     #formatted_end_date = datetime.strptime(end_date, "%Y-%m-%d").strftime("%Y%m%d")
     #stocks = ['XLK', 'XLB', 'XLI', 'XLE', 'XLV', 'XLY', 'XLF', 'XLU', 'XLP']
     data = yf.download(stocks, start=start_date).dropna()
-    data_close = round(data['Adj Close'], 2)
+    data_close = round(data['Close'], 2)
     df_relative = round(data_close / data_close.iloc[0] * 100, 1)
     # Function to calculate trend for different periods
     def calculate_trend(stock_data, period):
@@ -208,12 +229,17 @@ def get_historical_data(symbol, start_date, end_date):
 
     #df = pdr.get_data_yahoo(symbol, start=start_date, end=end_date)
     df = yf.download(symbol, interval= '1d')
-    df = df.rename(columns = {'Open': 'open', 'High': 'high', 'Low': 'low', 'Close': 'close', 'Adj Close': 'adj close', 'Volume': 'volume'})
-    for i in df.columns:
-        df[i] = df[i].astype(float)
-    df.index = pd.to_datetime(df.index)
-    if start_date:
-        df = df[df.index >= pd.to_datetime(start_date)]
+    df = df.rename(columns = {'Open': 'open', 'High': 'high', 'Low': 'low', 'Close': 'close', 'Volume': 'volume'})
+    df = df.rename(columns = {'Open': 'open', 'High': 'high', 'Low': 'low', 'Close': 'close','Volume': 'volume'})
+    df = df.swaplevel(axis=1).droplevel(axis=1, level=0).reset_index()
+    df.columns.name = None
+
+    #for i in df.columns:
+    #    if i != 'Date':
+    #        df[i] = df[i].astype(float)
+    #df.index = pd.to_datetime(df.index)
+    #if start_date:
+    #    df = df[df.index >= pd.to_datetime(start_date)]
     return df
     
 # Convert number to text 
@@ -328,6 +354,8 @@ def fetch_financials(symbol):
 def gen_macd_color(df):
     macd_color = []
     macd_color.clear()
+    print("inside gen_macd_color===================>")
+    print(df.head(5))
     for i in range (0,len(df["MACDh_12_26_9"])):
         if df["MACDh_12_26_9"][i] >= 0 and df["MACDh_12_26_9"][i-1] < df["MACDh_12_26_9"][i]:
             macd_color.append('#26A69A')
@@ -435,10 +463,9 @@ def golden_cal(df):
 
 # Sidebar for user input
 #######################
-#st.markdown('---')
-
-#st.sidebar.subheader('Settings')
-#st.sidebar.caption(":chart_with_upwards_trend: Stock Analysis")
+# Sidebar content with styled headers
+st.sidebar.markdown('<div class="sidebar-header">📈 Equity Analysis</div>', unsafe_allow_html=True)
+#st.sidebar.markdown('<div class="sidebar-subheader">Helps you with Fundamental, Technical & Market Analysis of Selected Tickers</div>', unsafe_allow_html=True)
 
 with st.sidebar:
     with st.sidebar.form("Submit",clear_on_submit=False, border= True):
@@ -448,7 +475,7 @@ with st.sidebar:
         selected_ticker = st.selectbox("Select Ticker", available_tickers, format_func=tickers_companies_dict.get)
         start_date = st.date_input("Start date", value=datetime.date(2010, 1, 1), min_value=datetime.date(2010, 1, 1), max_value=today)
         end_date = st.date_input("End date", datetime.date.today())
-        df = load_data(selected_ticker, start_date, end_date)['Close'].reset_index()
+        df = load_data(selected_ticker, start_date, end_date)
         # Find the maximum date in the DataFrame
         df['Date'] = pd.to_datetime(df['Date'])
         max_date = pd.to_datetime(df['Date'].max())
@@ -456,19 +483,17 @@ with st.sidebar:
         last_year_data = df[df['Date'] >= one_year_ago]
         x = round(last_year_data['Close'].describe(), 2)
         temp_str=""
-        temp_index=""
         out_str=""
         # Iterate over the Series using items()
         for index, value in x.items():
-            if index not in ['count']:
-                temp_index = index + " is "
-                temp_str = temp_index + str(value)
-
-            out_str = out_str + " --- " + temp_str
+            if index not in ['count']: 
+                #temp_str = index + " of " + selected_ticker + " is " + str(value) + "  "
+                temp_str = index + " is " + str(value) + "  "
+            out_str = out_str + temp_str + "|"
         
         submitted_form = st.form_submit_button("Submit")
 
-    expander_title = f"{selected_ticker} Stats."
+    expander_title = f"Expand for Viewing Key Stats of {selected_ticker} !!!"
     with st.sidebar.expander(expander_title):
             #st.write(out_str)
             #st.markdown(hide, unsafe_allow_html=True)
@@ -483,10 +508,11 @@ with st.sidebar:
     if selected_ticker == 'SPY':
          stock_df = load_data(['SPY'], start=start_date, end=end_date)
          print(stock_df.columns)
-         fig = px.line(stock_df, x=stock_df.index, y=stock_df.Close, title = f"Closing Prices vs Benchmark", template= 'simple_white')
+         fig = px.line(stock_df, x=stock_df.index, y=stock_df.Close, title = f"Closing Prices", template= 'simple_white')
      
     else:
-         stock_df = load_data(['SPY', selected_ticker], start=start_date, end=end_date)['Close']
+         stock_df = yf.download(['SPY', selected_ticker], start=start_date, end=end_date)['Close']
+         print(stock_df.head(1))
          fig = px.line(stock_df, x=stock_df.index, y=stock_df.columns,title = f"Closing Prices vs Benchmark", template= 'simple_white' )
 
     st.sidebar.plotly_chart(fig,use_container_width=True)
@@ -619,6 +645,7 @@ with col[1]:
         #data.columns = ['close', 'volume', 'open', 'high', 'low']
         ohlc = data.sort_values(by=['Date'],ascending=True)
         ta_df = pd.DataFrame()
+        ta_df["Date"] = ohlc["Date"]
         ta_df['open'] = ohlc['open']
         ta_df['close'] = ohlc['close']
         ta_df['high'] = ohlc['high']
@@ -629,12 +656,14 @@ with col[1]:
         ta_df['SMA_50'] = round(TA.SMA(ohlc,50),2)
         ta_df['SMA_100'] = round(TA.SMA(ohlc,100),2)
         ta_df['MACD'] =  round(TA.MACD(ohlc),2)['MACD']
-        ta_df['SAR'] = round(TA.SAR(ohlc),2)
+        #ta_df['SAR'] = round(TA.SAR(ohlc),2)
         ta_df['BB_Upper'] = round(TA.MOBO(ohlc),2)['BB_UPPER']
         #ta_df['BB_Middle'] = round(TA.MOBO(ohlc),2)['BB_MIDDLE']
         #ta_df['BB_Lower'] = round(TA.MOBO(ohlc),2)['BB_LOWER']
         # ta_df = ta_df.tail(5)
-        ta_df = ta_df.reset_index()
+        #ta_df = ta_df.reset_index()
+        print("ta_df ==>")
+        print(ta_df.head(5))
         ta_df["Date"] = pd.to_datetime(ta_df["Date"])
         ta_df["Date"] = ta_df["Date"].dt.strftime("%Y-%m-%d")
         st.dataframe(ta_df.tail(100), hide_index=True)
@@ -643,6 +672,7 @@ with col[1]:
         st.write('Note:- Default Chart Style is nightclouds- you may select your style from the sidebar by Scrolling Down !!')
         st.write(f'{selected_ticker} - MACD <12_26_9> [Signal->Orange,MACD->Blue]')
         df_macd = data.tail(300).copy()
+        df_macd = df_macd.set_index("Date")
         #Get the 12-day EMA of the closing price
         k = df_macd['close'].ewm(span=12, adjust=False, min_periods=12).mean()
         #Get the 26-day EMA of the closing price
@@ -685,6 +715,8 @@ with col[1]:
         ####  Donchain channel
         #For Calcultation Dochian Channel
         df_dc = data.tail(120).copy()
+        df_dc = df_dc.set_index('Date')
+        print(df_dc.tail(2))
         st.write("DONCHAIN CHANNEL - Volatility Indicator to identify price trends & optimal entry & exit in ranging markets.")
         period = 10
         df_dc['Upper'] = df_dc['high'].rolling(period).max()
@@ -777,7 +809,8 @@ with col[1]:
         st.write("A golden cross is a chart pattern in which a relatively short-term moving average crosses above a long-term moving average. Choose short and long periods to proceed")
         frames = [9,21,50,100,200]
         maflag1 = ""
-        df = data.copy()
+        df = data.tail(100).copy()
+        df = df.set_index("Date")
         with st.form("aform"):
             short_period = st.selectbox("Select Short Period", frames)
             long_period = st.selectbox("Select Long Period", frames)
@@ -955,7 +988,8 @@ with col[2]:
         ##############################
             with third_col[0]:
                 st.write('Volume Profile')
-                data.index = data.index.date
+                data = data.set_index("Date")
+                #data.index = data.index.Date
                 data=data.sort_index(ascending=False).head(6)
                 vol_df = pd.DataFrame()
                 vol_df['volume'] = data['volume']
