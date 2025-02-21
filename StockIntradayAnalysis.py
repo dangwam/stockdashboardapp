@@ -6,15 +6,93 @@ import datetime as dt
 import numpy as np
 import mplfinance as mpf
 from plotly import express as px
-## last change 11/19/2024
-
+## last change 02/21/2025
 ##
-
+# Page configuration
 st.set_page_config(page_title="Daily Intraday Analysis", 
                    page_icon="🤖",
                    layout="wide")
 
 st.title("Daily Intraday Analysis")
+
+#alt.themes.enable("dark")
+
+#######################
+# CSS styling
+# CSS styling
+st.markdown("""
+<style>
+
+/* Main container adjustments */
+[data-testid="block-container"] {
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-top: 2rem;
+    padding-bottom: 0rem;
+    margin-bottom: -7rem;
+}
+
+/* General block layout */
+[data-testid="stVerticalBlock"] {
+    padding-left: 0rem;
+    padding-right: 0rem;
+}
+
+/* Metric display improvements */
+[data-testid="stMetric"] {
+    background-color: #393939;
+    text-align: center;
+    padding: 15px 0;
+    border-radius: 10px;
+}
+
+[data-testid="stMetricLabel"] {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Up/down trend icon adjustments */
+[data-testid="stMetricDeltaIcon-Up"], 
+[data-testid="stMetricDeltaIcon-Down"] {
+    position: relative;
+    left: 38%;
+    transform: translateX(-50%);
+}
+
+/* Sidebar header */
+.sidebar-header {
+    color: white;
+    background: linear-gradient(90deg, #003366, #00509e);
+    padding: 12px;
+    font-size: 20px;
+    font-weight: bold;
+    border-radius: 8px;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+/* Sidebar subheader */
+.sidebar-subheader {
+    color: white;
+    background: linear-gradient(90deg, #00509e, #0073e6);
+    padding: 8px;
+    font-size: 16px;
+    border-radius: 8px;
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+/* Sidebar padding adjustments */
+[data-testid="stSidebar"] {
+    background-color: #1e1e1e;
+    padding: 10px;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+
 # Load data -- data functions
 @st.cache_data
 def get_sp500_components():
@@ -33,27 +111,28 @@ def load_data(ticker,interval):
 
      if interval == '1m':
         stock_df = yf.download(tickers = [ticker], interval= '1m')
-        stock_df.columns = stock_df.columns.droplevel(1)  # Remove the first level (Price)
-        stock_df = stock_df.reset_index()  # Make Date a column
+        stock_df = stock_df.swaplevel(axis=1).droplevel(axis=1, level=0).reset_index()
+        stock_df.columns.name = None
         stock_df.columns = ['Datetime', 'Close', 'High', 'Low', 'Open', 'Volume']
      if interval == '5m':
         stock_df = yf.download(ticker, interval= interval, period = '60d')
-        stock_df.columns = stock_df.columns.droplevel(1)  # Remove the first level (Price)
-        stock_df = stock_df.reset_index()  # Make Date a column
+        stock_df = stock_df.swaplevel(axis=1).droplevel(axis=1, level=0).reset_index()
+        stock_df.columns.name = None
         stock_df.columns = ['Datetime', 'Close', 'High', 'Low', 'Open', 'Volume']
      if interval == '15m':
         stock_df = yf.download(ticker, interval= interval, period = '60d')
-        stock_df.columns = stock_df.columns.droplevel(1)  # Remove the first level (Price)
-        stock_df = stock_df.reset_index()  # Make Date a column
+        stock_df = stock_df.swaplevel(axis=1).droplevel(axis=1, level=0).reset_index()
+        stock_df.columns.name = None
         stock_df.columns = ['Datetime', 'Close', 'High', 'Low', 'Open', 'Volume']
      if interval == '1h':
         stock_df = yf.download(ticker, interval= interval, period = "500d")
-        stock_df.columns = stock_df.columns.droplevel(1)  # Remove the first level (Price)
-        stock_df = stock_df.reset_index()  # Make Date a column
+        stock_df = stock_df.swaplevel(axis=1).droplevel(axis=1, level=0).reset_index()
+        stock_df.columns.name = None
         stock_df.columns = ['Datetime', 'Close', 'High', 'Low', 'Open', 'Volume']
      if interval == '1d':
         stock_df = yf.download(tickers = ticker, period = '10y', interval= '1d')
-        stock_df = stock_df.reset_index()
+        stock_df = stock_df.swaplevel(axis=1).droplevel(axis=1, level=0).reset_index()
+        stock_df.columns.name = None
         stock_df.columns = ['Date', 'Close', 'High', 'Low', 'Open', 'Volume']
      
      return stock_df
@@ -63,8 +142,8 @@ def get_industry_data(stocks, period):
     #formatted_end_date = datetime.strptime(end_date, "%Y-%m-%d").strftime("%Y%m%d")
     #stocks = ['XLK', 'XLB', 'XLI', 'XLE', 'XLV', 'XLY', 'XLF', 'XLU', 'XLP']
     data = yf.download(stocks, period = period, interval = '1d').dropna()
-    data = data.reset_index()
-    data.columns = ['Date', 'Close', 'High', 'Low', 'Open', 'Volume']
+    #data = data.reset_index()
+    #data.columns = ['Date', 'Close', 'High', 'Low', 'Open', 'Volume']
     data_close = round(data['Close'], 2)
     df_relative = round(data_close / data_close.iloc[0] * 100, 1)
     # Function to calculate trend for different periods
@@ -89,7 +168,7 @@ def get_industry_data(stocks, period):
         })
     
     trend_df = pd.DataFrame(trends)
-            
+             
     return df_relative, data_close, trend_df      
     
 def highlight_trends(val):
@@ -202,7 +281,8 @@ def golden_cal(df):
                 df['DeathCrossOver'] = deathSignal
 
      
-
+print(" -----------------------------------------------Starting----------------------------------------------------------")
+st.sidebar.markdown('<div class="sidebar-header">📈 iNTRADAY Equity Analysis</div>', unsafe_allow_html=True)
 with st.sidebar:
     stock_df = pd.DataFrame()
     with st.sidebar.form("Submit",clear_on_submit=False, border= True):
@@ -210,9 +290,11 @@ with st.sidebar:
         available_tickers, tickers_companies_dict = get_sp500_components()
         selected_ticker = st.selectbox("Select Ticker", available_tickers, format_func=tickers_companies_dict.get,placeholder='Choose a value')
         interval = st.selectbox("Select Data Interval", ['1m', '5m', '15m', '1h', '1d'] )
-        print(interval)
+        
         #if submitted_form:
         stock_df = load_data(selected_ticker, interval)
+        
+        
        #st.sidebar.dataframe(stock_df[['Open','High','Low','Close']].tail(5),hide_index=False)
             #st.sidebar.caption('_Last_ :blue[5] Candles :stars:')
             #st.caption('A caption with _italics_ :blue[colors] and emojis :sunglasses:')
@@ -247,14 +329,23 @@ col = st.columns((10, 3), gap='small')
 with col[0]:
     #st.write("Column 0")
     #st.dataframe(stock_df)
+    
     if interval == '1d':
+            ohlc = stock_df.set_index('Date')
             ohlc = stock_df.sort_values(by=['Date'],ascending=True)
     else:
+            ohlc = stock_df.set_index('Datetime')
             ohlc = stock_df.sort_values(by=['Datetime'],ascending=True)
             
     ta_df = pd.DataFrame()
     #st.dataframe(ohlc.tail(2))
     #st.dataframe(stock_df.tail(2))
+    if interval == '1d':
+            ta_df['Date'] = ohlc['Date']
+           
+    else:
+            ta_df['Datetime'] = ohlc['Datetime']
+            
     ta_df['open'] = round(ohlc['Open'],2)
     ta_df['close'] = round(ohlc['Close'],2)
     ta_df['volume'] = round(ohlc['Volume'],2)
@@ -286,8 +377,7 @@ with col[0]:
     ta_df['high'] = round(ohlc['High'],2)
     ta_df['low'] = round(ohlc['Low'],2)
     #ta_df.to_csv('./data/ta_df.csv')
-    ta_df = ta_df.sort_index(ascending=False)
-    ta_df = ta_df.reset_index()
+    ta_df = ta_df.sort_index(ascending=True)
     st.dataframe(ta_df, hide_index=True)
 
     ###################
@@ -296,6 +386,11 @@ with col[0]:
     st.write('Note:- Default Chart Style is nightclouds- you may select your style from the sidebar by Scrolling Down !!')
     st.write(f'{selected_ticker} - MACD <12_26_9> [Signal->Orange,MACD->Blue]')
     df_macd = stock_df.tail(250).copy()
+    if interval == "1d":
+            df_macd = df_macd.set_index("Date")
+    else:
+            df_macd = df_macd.set_index("Datetime")
+    
             #Get the 26-day EMA of the closing price
     k = df_macd['Close'].ewm(span=12, adjust=False, min_periods=12).mean()
             #Get the 12-day EMA of the closing price
@@ -340,6 +435,10 @@ with col[0]:
     ###################
 
     df_dc = stock_df.tail(200).copy()
+    if interval == "1d":
+            df_dc = df_dc.set_index('Date')
+    else:
+            df_dc = df_dc.set_index('Datetime')
     st.write("DONCHAIN CHANNEL - Volatility Indicator to identify price trends & optimal entry & exit in ranging markets.")
     period = 10
     df_dc['Upper'] = df_dc['High'].rolling(period).max()
@@ -379,13 +478,12 @@ with col[0]:
         #df_ma = df_macd[columns_to_copy]
     st.write(f'{selected_ticker}- Multi Period SMA [ 9->Blue, 20->Green ,50->Red, 100-> Purple]')
     df_ma = ta_df.head(170).copy()
-    df_ma = df_ma.sort_index(ascending=False)
     if interval == '1d':
             df_ma = df_ma.set_index('Date')
            # df_ma.index = pd.to_datetime(df_ma.index)  # Ensure index is datetime
     else:
             df_ma = df_ma.set_index('Datetime')  # Ensure index is datetime
-    
+    df_ma = df_ma.sort_index(ascending=False)
     #st.dataframe(df_ma)
 
     #df_ma['SMA_200'] = df_ma['close'].rolling(window=200).mean()
@@ -435,6 +533,10 @@ with col[0]:
     default_short_period = frames.index(9)
     maflag1 = ""
     df = stock_df.tail(200).copy()
+    if interval == "1d":
+            df = df.set_index("Date")
+    else:
+            df = df.set_index("Datetime")
     with st.form("select Periods",clear_on_submit=False, border= True):
             short_period = st.selectbox("Select Short Period", frames, index = default_short_period )
             long_period = st.selectbox("Select Long Period", frames, index = default_long_period)
@@ -454,7 +556,7 @@ with col[0]:
             elif long_period == 100: maflag2 = "SMA100"
             else : maflag2 = "SMA200"
 
-            print(long_period, short_period)
+            #print(long_period, short_period)
                             
             if (short_period == 9 and long_period == 21):
                                 df[maflag1] = df['Close'].rolling(window=9).mean()
@@ -530,6 +632,11 @@ with col[0]:
 with col[1]:
      #st.write('*****Data Inferences*****',)
      temp_df = stock_df.tail(300).copy()
+     if interval == "1d":
+            temp_df = temp_df.set_index("Date")
+     else:
+            temp_df = temp_df.set_index("Datetime")
+
      trend_q1, trend_q2, trend_q3, trend_q4, trend_q5, trend_q6= find_trend(temp_df)
      #st.metric("5% quartile Trend is ", value=trend_q1, delta = trend_q1 )
      #st.metric("10% quartile Trend is ", value=trend_q2, delta = trend_q2 )
@@ -540,7 +647,7 @@ with col[1]:
      st.write('Price & Volume EMA Plot. blue->11ema, purple->21ema')
 #st.dataframe(stock_df[['Open','High','Low','Close','Volume']].tail(5),hide_index=False)
     #temp_df = stock_df.copy()
-     temp_df = temp_df.drop(columns=['Adj Close'], axis=1)
+     #temp_df = temp_df.drop(columns=['Close'], axis=1)
      temp_df.index = pd.to_datetime(temp_df.index)  # Ensure index is datetime
      #temp_df = temp_df.rename(columns={'Volume':'Close'})
      temp_df['9ema'] =  round((temp_df['Volume'].ewm(span=11, adjust=False, min_periods=11).mean() / 100) , 2)
@@ -583,6 +690,7 @@ with col[1]:
      index_etfs = ['SPY', 'DIA', 'QQQ', 'TLT', 'GLD', 'SLV', 'OILK', 'RINF', 'VIXY']
      index_df, index_cp, index_trend_df = get_industry_data(index_etfs, '2y')
      # Suppress the time part and display just the date portion
+     #print(index_df.head(2))
      index_df.index = index_df.index.strftime('%Y-%m-%d')
      index_df = index_df.sort_index().tail(6)
      #print(relative_df.info())

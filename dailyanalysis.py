@@ -354,8 +354,7 @@ def fetch_financials(symbol):
 def gen_macd_color(df):
     macd_color = []
     macd_color.clear()
-    print("inside gen_macd_color===================>")
-    print(df.head(5))
+    
     for i in range (0,len(df["MACDh_12_26_9"])):
         if df["MACDh_12_26_9"][i] >= 0 and df["MACDh_12_26_9"][i-1] < df["MACDh_12_26_9"][i]:
             macd_color.append('#26A69A')
@@ -507,12 +506,12 @@ with st.sidebar:
     print(f"selected_ticker is {selected_ticker}")
     if selected_ticker == 'SPY':
          stock_df = load_data(['SPY'], start=start_date, end=end_date)
-         print(stock_df.columns)
+         
          fig = px.line(stock_df, x=stock_df.index, y=stock_df.Close, title = f"Closing Prices", template= 'simple_white')
      
     else:
          stock_df = yf.download(['SPY', selected_ticker], start=start_date, end=end_date)['Close']
-         print(stock_df.head(1))
+         
          fig = px.line(stock_df, x=stock_df.index, y=stock_df.columns,title = f"Closing Prices vs Benchmark", template= 'simple_white' )
 
     st.sidebar.plotly_chart(fig,use_container_width=True)
@@ -592,7 +591,7 @@ with col[0]:
     
     security = get_stock_type(selected_ticker)
     print(f'security type is {security}')
-    print(security)
+    
     if security == 'EQUITY':
         forwardPE,priceToSalesTrailing12Months,enterpriseValue,profitMargins,dividend_yield = get_stock_info(selected_ticker,security)
         st.metric(label="Dividend Yeild", value='{:.2%}'.format(dividend_yield))
@@ -662,8 +661,7 @@ with col[1]:
         #ta_df['BB_Lower'] = round(TA.MOBO(ohlc),2)['BB_LOWER']
         # ta_df = ta_df.tail(5)
         #ta_df = ta_df.reset_index()
-        print("ta_df ==>")
-        print(ta_df.head(5))
+        
         ta_df["Date"] = pd.to_datetime(ta_df["Date"])
         ta_df["Date"] = ta_df["Date"].dt.strftime("%Y-%m-%d")
         st.dataframe(ta_df.tail(100), hide_index=True)
@@ -716,7 +714,7 @@ with col[1]:
         #For Calcultation Dochian Channel
         df_dc = data.tail(120).copy()
         df_dc = df_dc.set_index('Date')
-        print(df_dc.tail(2))
+        #print(df_dc.tail(2))
         st.write("DONCHAIN CHANNEL - Volatility Indicator to identify price trends & optimal entry & exit in ranging markets.")
         period = 10
         df_dc['Upper'] = df_dc['high'].rolling(period).max()
