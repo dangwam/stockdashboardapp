@@ -33,16 +33,29 @@ def load_data(ticker,interval):
 
      if interval == '1m':
         stock_df = yf.download(tickers = [ticker], interval= '1m')
+        stock_df.columns = stock_df.columns.droplevel(1)  # Remove the first level (Price)
+        stock_df = stock_df.reset_index()  # Make Date a column
+        stock_df.columns = ['Datetime', 'Close', 'High', 'Low', 'Open', 'Volume']
      if interval == '5m':
         stock_df = yf.download(ticker, interval= interval, period = '60d')
+        stock_df.columns = stock_df.columns.droplevel(1)  # Remove the first level (Price)
+        stock_df = stock_df.reset_index()  # Make Date a column
+        stock_df.columns = ['Datetime', 'Close', 'High', 'Low', 'Open', 'Volume']
      if interval == '15m':
         stock_df = yf.download(ticker, interval= interval, period = '60d')
+        stock_df.columns = stock_df.columns.droplevel(1)  # Remove the first level (Price)
+        stock_df = stock_df.reset_index()  # Make Date a column
+        stock_df.columns = ['Datetime', 'Close', 'High', 'Low', 'Open', 'Volume']
      if interval == '1h':
         stock_df = yf.download(ticker, interval= interval, period = "500d")
+        stock_df.columns = stock_df.columns.droplevel(1)  # Remove the first level (Price)
+        stock_df = stock_df.reset_index()  # Make Date a column
+        stock_df.columns = ['Datetime', 'Close', 'High', 'Low', 'Open', 'Volume']
      if interval == '1d':
         stock_df = yf.download(tickers = ticker, period = '10y', interval= '1d')
-
-     #st.write(stock_df.reset_index().tail(2))
+        stock_df = stock_df.reset_index()
+        stock_df.columns = ['Date', 'Close', 'High', 'Low', 'Open', 'Volume']
+     
      return stock_df
 
 @st.cache_data
@@ -50,7 +63,9 @@ def get_industry_data(stocks, period):
     #formatted_end_date = datetime.strptime(end_date, "%Y-%m-%d").strftime("%Y%m%d")
     #stocks = ['XLK', 'XLB', 'XLI', 'XLE', 'XLV', 'XLY', 'XLF', 'XLU', 'XLP']
     data = yf.download(stocks, period = period, interval = '1d').dropna()
-    data_close = round(data['Adj Close'], 2)
+    data = data.reset_index()
+    data.columns = ['Date', 'Close', 'High', 'Low', 'Open', 'Volume']
+    data_close = round(data['Close'], 2)
     df_relative = round(data_close / data_close.iloc[0] * 100, 1)
     # Function to calculate trend for different periods
     def calculate_trend(stock_data, period):

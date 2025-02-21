@@ -3,7 +3,7 @@ streamlit
 pandas
 numpy
 plotly
-yfinance==0.2.37
+yfinance==0.2.54
 datetime
 finta
 mplfinance
