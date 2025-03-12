@@ -563,7 +563,10 @@ st.markdown(hide, unsafe_allow_html=True)
 col = st.columns((1, 3, 1.5), gap='small')
 with col[0]:
     st.markdown('#### Cumulative returns')
-    monthly_prices = stock_df.resample('M').last()
+    print(stock_df.info())
+    if selected_ticker in ['SPY', 'QQQ' ]:
+        stock_df = stock_df.set_index('Date')
+    monthly_prices = stock_df.resample('ME').last()
     outlier_cutoff = 0.01
     data = pd.DataFrame()
     lags = [1, 2, 3, 6, 9, 12]
