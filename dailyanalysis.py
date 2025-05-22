@@ -1,5 +1,4 @@
 import streamlit as st
-#import altair as alt  # Import altair for themes
 import pandas as pd
 import yfinance as yf
 from finta import TA
@@ -8,8 +7,10 @@ import mplfinance as mpf
 import yahooquery as yq
 #from pandas_datareader import data as pdr
 from plotly import express as px
-#import plotly.graph_objs as go
 import datetime
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
+
 #from matplotlib import pyplot as plt
 #from plotly import graph_objects as go
 #yf.pdr_override()
@@ -120,8 +121,6 @@ st.markdown("""
 
 #######################
 print("------------------------------------------------------------Starting-----------------------------------------------------------------------------")
-#st.write("---------------------------------------------------------------------------------------------------------------------------------------------------------")
-#st.title("Equity Analysis App :chart_with_upwards_trend:")
 st.markdown(title_format, unsafe_allow_html=True)
 
 # Load data -- data functions
@@ -134,7 +133,6 @@ def get_sp500_components():
     extended_companies = ['Rivian Automotive', 'Broadcom Inc', 'SPDR S&P 500 ETF', 'Invesco QQQ Trust', 'Tesla', 'Mastercard', 'Palantir', 'Sofi', 'Pfizer', 'WallGreens','BJ','AsteraLab-IPO','ZOmedica-P','Nemura-IPO','IREnergy-IPO','DraftKng-P','Rocketlab-P','APLT-P','VirginGalactic', 'Swiss Re', 'NIO', 'Mobilye', 'Quantum Scape', 'Archer Aviation', 'Nokia', 'Wolfsped','Microstrategy']
     # Combine tickers with extended symbols
     tickers.extend(extended_symbols)
-    ##tickers_companies_dict = dict(zip(df["Symbol"], df["Security"]))
     tickers_companies_dict = dict(zip(df["Symbol"], df["Security"]), **dict(zip(extended_symbols, extended_companies)))
     return tickers, tickers_companies_dict
 
@@ -546,7 +544,7 @@ with st.sidebar:
             'mike', 'nightclouds', 'sas', 'starsandstripes'
         ]
         
-        chart_style = st.selectbox('Chart style', options=chart_styles, index=chart_styles.index('nightclouds'))
+        chart_style = st.selectbox('Chart style', options=chart_styles, index=chart_styles.index('yahoo'))
         
         chart_types = [
             'candle', 'ohlc', 'line', 'renko', 'pnf'
@@ -916,7 +914,7 @@ with col[2]:
             #st.dataframe(fin_df) 
             rename_dict = {'numberOfAnalystOpinions': 'Analyst Ratings', 'recommendationKey': 'Opinion', 'targetMedianPrice': 'Median Target', 'totalCash': 'Cash Available', 'debtToEquity': 'Total Debt/Equity %'}
             fin_df.rename(columns=rename_dict, inplace=True)  
-            fin_df = fin_df.transpose()
+            fin_df = fin_df.transpose().astype(str)
             #df_transposed = df_transposed.apply(pd.to_numeric, errors='coerce')
             # Use the Pandas style to enhance the DataFrame appearance
             styled_df = fin_df.style.set_table_styles(

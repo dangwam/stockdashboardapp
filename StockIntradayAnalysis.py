@@ -9,90 +9,56 @@ from plotly import express as px
 ## last change 02/21/2025
 ##
 # Page configuration
-st.set_page_config(page_title="Daily Intraday Analysis", 
+st.set_page_config(page_title="Intraday Analysis", 
                    page_icon="🤖",
                    layout="wide")
 
-st.title("Daily Intraday Analysis")
+#
 
 #alt.themes.enable("dark")
 
 #######################
 # CSS styling
 # CSS styling
-st.markdown("""
-<style>
+st.markdown(
+    """
+    <h1 style='
+        margin-top: -60px;
+        text-align: center;
+        color: #3FA7D6;           /* Use any HEX, RGB, or named color */
+        font-size: 3rem;          /* Adjust size as needed */
+        font-family: "Segoe UI", Arial, sans-serif;
+        font-weight: 700;         /* Bold */
+        letter-spacing: 2px;      /* Spacing between letters */
+        background: linear-gradient(90deg, #3FA7D6, #A1FFCE); /* Optional gradient */
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    '>Daily Intraday Analysis</h1>
 
-/* Main container adjustments */
-[data-testid="block-container"] {
-    padding-left: 1rem;
-    padding-right: 1rem;
-    padding-top: 2rem;
-    padding-bottom: 0rem;
-    margin-bottom: -7rem;
-}
-
-/* General block layout */
-[data-testid="stVerticalBlock"] {
-    padding-left: 0rem;
-    padding-right: 0rem;
-}
-
-/* Metric display improvements */
-[data-testid="stMetric"] {
-    background-color: #393939;
-    text-align: center;
-    padding: 15px 0;
-    border-radius: 10px;
-}
-
-[data-testid="stMetricLabel"] {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-/* Up/down trend icon adjustments */
-[data-testid="stMetricDeltaIcon-Up"], 
-[data-testid="stMetricDeltaIcon-Down"] {
-    position: relative;
-    left: 38%;
-    transform: translateX(-50%);
-}
-
-/* Sidebar header */
-.sidebar-header {
-    color: white;
-    background: linear-gradient(90deg, #003366, #00509e);
-    padding: 12px;
-    font-size: 20px;
-    font-weight: bold;
-    border-radius: 8px;
-    text-align: center;
-    margin-bottom: 10px;
-}
-
-/* Sidebar subheader */
-.sidebar-subheader {
-    color: white;
-    background: linear-gradient(90deg, #00509e, #0073e6);
-    padding: 8px;
-    font-size: 16px;
-    border-radius: 8px;
-    text-align: center;
-    margin-bottom: 15px;
-}
-
-/* Sidebar padding adjustments */
-[data-testid="stSidebar"] {
-    background-color: #1e1e1e;
-    padding: 10px;
-}
-
-</style>
-""", unsafe_allow_html=True)
+    <style>
+    .sidebar-header {
+        background: linear-gradient(90deg, #00509e 0%, #3fa7d6 100%);
+        color: #fff;
+        font-size: 1.0rem;
+        font-family: 'Segoe UI', Arial, sans-serif;
+        font-weight: bold;
+        padding: 0px 0px;
+        border-radius: 10px;
+        text-align: center;
+        margin-bottom: 18px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+        letter-spacing: 1px;
+        text-shadow: 1px 1px 2px #0002;
+        border: 1px solid #0073e6;
+    }
+    </style> 
+    """,
+    unsafe_allow_html=True
+)
 
 
+
+#st.title("Daily Intraday Analysis")
 # Load data -- data functions
 @st.cache_data
 def get_sp500_components():
@@ -289,7 +255,7 @@ with st.sidebar:
         default_val = "********************"
         available_tickers, tickers_companies_dict = get_sp500_components()
         selected_ticker = st.selectbox("Select Ticker", available_tickers, format_func=tickers_companies_dict.get,placeholder='Choose a value')
-        interval = st.selectbox("Select Data Interval", ['1m', '5m', '15m', '1h', '1d'] )
+        interval = st.selectbox("Select Data Interval", ['1d','1h', '15m', '5m', '1m'] )
         
         #if submitted_form:
         stock_df = load_data(selected_ticker, interval)

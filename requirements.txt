@@ -8,3 +8,4 @@ datetime
 finta
 mplfinance
 yahooquery
+### 5/22/2025
