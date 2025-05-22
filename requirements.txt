@@ -1,4 +1,5 @@
 #refresh it
+python=3.10
 streamlit
 pandas
 numpy
