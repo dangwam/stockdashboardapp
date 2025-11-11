@@ -136,13 +136,35 @@ def get_sp500_components():
     tickers_companies_dict = dict(zip(df["Symbol"], df["Security"]), **dict(zip(extended_symbols, extended_companies)))
     return tickers, tickers_companies_dict
 
-@st.cache_data
-def load_data(symbol, start, end):
-    stock_df = yf.download(symbol, start, end)
-    t_df = stock_df.swaplevel(axis=1).droplevel(axis=1, level=0).reset_index()
-    t_df.columns.name = None  
-    return t_df
-    
+
+#@st.cache_data
+#def load_data(symbol, start, end):
+#    stock_df = yf.download(symbol, start, end)
+#    t_df = stock_df.swaplevel(axis=1).droplevel(axis=1, level=0).reset_index()
+#    t_df.columns.name = None  
+#    return t_df
+
+@st.cache_data()
+def load_data(ticker,interval):
+
+     
+     if interval == '15m':
+        stock_df = yf.download(ticker, interval= interval, period = '60d')
+        stock_df = stock_df.swaplevel(axis=1).droplevel(axis=1, level=0).reset_index()
+        stock_df.columns.name = None
+        stock_df.columns = ['Datetime', 'Close', 'High', 'Low', 'Open', 'Volume']
+     if interval == '1h':
+        stock_df = yf.download(ticker, interval= interval, period = "500d")
+        stock_df = stock_df.swaplevel(axis=1).droplevel(axis=1, level=0).reset_index()
+        stock_df.columns.name = None
+        stock_df.columns = ['Datetime', 'Close', 'High', 'Low', 'Open', 'Volume']
+     if interval == '1d':
+        stock_df = yf.download(tickers = ticker, period = '10y', interval= '1d')
+        stock_df = stock_df.swaplevel(axis=1).droplevel(axis=1, level=0).reset_index()
+        stock_df.columns.name = None
+        stock_df.columns = ['Date', 'Close', 'High', 'Low', 'Open', 'Volume']
+
+     return stock_df    
 @st.cache_data
 def get_company_info(ticker):
   symbol = ticker
@@ -472,29 +494,31 @@ with st.sidebar:
         selected_ticker = st.selectbox("Select Ticker", available_tickers, format_func=tickers_companies_dict.get)
         start_date = st.date_input("Start date", value=datetime.date(2010, 1, 1), min_value=datetime.date(2010, 1, 1), max_value=today)
         end_date = st.date_input("End date", datetime.date.today())
-        df = load_data(selected_ticker, start_date, end_date)
+        interval = st.selectbox("Select Data Interval", ['1d','15m', '1h'] )
+        #df = load_data(selected_ticker, start_date, end_date,interval)
+        df = load_data(selected_ticker, interval)
         # Find the maximum date in the DataFrame
-        df['Date'] = pd.to_datetime(df['Date'])
-        max_date = pd.to_datetime(df['Date'].max())
-        one_year_ago = max_date - pd.DateOffset(years=1)
-        last_year_data = df[df['Date'] >= one_year_ago]
-        x = round(last_year_data['Close'].describe(), 2)
-        temp_str=""
-        out_str=""
+        #df['Date'] = pd.to_datetime(df['Date'])
+        #max_date = pd.to_datetime(df['Date'].max())
+        #one_year_ago = max_date - pd.DateOffset(years=1)
+        #last_year_data = df[df['Date'] >= one_year_ago]
+        #x = round(last_year_data['Close'].describe(), 2)
+        #temp_str=""
+        #out_str=""
         # Iterate over the Series using items()
-        for index, value in x.items():
-            if index not in ['count']: 
-                #temp_str = index + " of " + selected_ticker + " is " + str(value) + "  "
-                temp_str = index + " is " + str(value) + "  "
-            out_str = out_str + temp_str + "|"
+        #for index, value in x.items():
+         #   if index not in ['count']: 
+         #       #temp_str = index + " of " + selected_ticker + " is " + str(value) + "  "
+         #       temp_str = index + " is " + str(value) + "  "
+         #   out_str = out_str + temp_str + "|"
         
         submitted_form = st.form_submit_button("Submit")
 
     expander_title = f"Expand for Viewing Key Stats of {selected_ticker} !!!"
-    with st.sidebar.expander(expander_title):
+    #with st.sidebar.expander(expander_title):
             #st.write(out_str)
             #st.markdown(hide, unsafe_allow_html=True)
-            st.markdown(out_str, unsafe_allow_html=True)
+     #       st.markdown(out_str, unsafe_allow_html=True)
 
      
     if start_date > end_date:
